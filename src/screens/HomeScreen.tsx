@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import {
   Dimensions,
   Image,
+  ImageBackground,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -98,22 +99,29 @@ export const HomeScreen: React.FC = () => {
             <Text style={styles.searchPlaceholder}>Tìm kiếm rau quả, sữa, thịt bò...</Text>
           </Pressable>
 
-          {/* Banner */}
-          <View style={styles.promoBanner}>
-            <View style={styles.todayBadge}>
-              <Text style={styles.todayBadgeText}>SIÊU ƯU ĐÃI HÔM NAY</Text>
+          {/* Banner with background image */}
+          <ImageBackground
+            source={require('../../background.png')}
+            style={styles.promoBanner}
+            imageStyle={styles.promoBannerImage}
+          >
+            {/* Translucent overlay to ensure maximum text legibility */}
+            <View style={styles.promoBannerOverlay}>
+              <View style={styles.todayBadge}>
+                <Text style={styles.todayBadgeText}>SIÊU ƯU ĐÃI HÔM NAY</Text>
+              </View>
+              <Text style={styles.promoTitle}>
+                Giảm tới <Text style={styles.promoHighlight}>29%</Text>
+              </Text>
+              <View style={styles.promoBottomRow}>
+                <Text style={styles.promoSub}>Các sản phẩm tươi sống hữu cơ</Text>
+                <Pressable style={styles.buyNowButton} onPress={() => handleCategoryPress('Khuyến mãi')}>
+                  <Text style={styles.buyNowText}>Mua ngay</Text>
+                  <Ionicons name="chevron-forward" size={12} color={COLORS.DARK_GREEN} style={{ marginLeft: 2 }} />
+                </Pressable>
+              </View>
             </View>
-            <Text style={styles.promoTitle}>
-              Giảm tới <Text style={styles.promoHighlight}>29%</Text>
-            </Text>
-            <View style={styles.promoBottomRow}>
-              <Text style={styles.promoSub}>Các sản phẩm tươi sống hữu cơ</Text>
-              <Pressable style={styles.buyNowButton} onPress={() => handleCategoryPress('Khuyến mãi')}>
-                <Text style={styles.buyNowText}>Mua ngay</Text>
-                <Ionicons name="chevron-forward" size={12} color={COLORS.DARK_GREEN} style={{ marginLeft: 2 }} />
-              </Pressable>
-            </View>
-          </View>
+          </ImageBackground>
 
           {/* Categories */}
           <SectionTitle title="Danh mục sản phẩm" icon="grid-outline" />
@@ -398,9 +406,15 @@ const styles = StyleSheet.create({
     minHeight: 132,
     borderRadius: 18,
     marginTop: 10,
-    padding: 16,
-    backgroundColor: '#3A9A45',
     overflow: 'hidden',
+  },
+  promoBannerImage: {
+    resizeMode: 'cover',
+  },
+  promoBannerOverlay: {
+    flex: 1,
+    padding: 16,
+    backgroundColor: 'rgba(29, 90, 43, 0.55)', // Translucent brand overlay for maximum legibility and harmony
   },
   todayBadge: {
     alignSelf: 'flex-start',

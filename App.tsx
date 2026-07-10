@@ -10,6 +10,14 @@ import { CatalogScreen } from './src/screens/CatalogScreen';
 import { SearchScreen } from './src/screens/SearchScreen';
 import { ProductDetailScreen } from './src/screens/ProductDetailScreen';
 import { ShelfMapScreen } from './src/screens/ShelfMapScreen';
+import { ScanScreen } from './src/screens/ScanScreen';
+import { AISuggestionScreen } from './src/screens/AISuggestionScreen';
+import { CheckoutScreen } from './src/screens/CheckoutScreen';
+import { QRPaymentScreen } from './src/screens/QRPaymentScreen';
+import { InvoiceScreen } from './src/screens/InvoiceScreen';
+import { InspectorLookupScreen } from './src/screens/InspectorLookupScreen';
+import { InspectorCheckScreen } from './src/screens/InspectorCheckScreen';
+import { InspectorDiscrepancyScreen } from './src/screens/InspectorDiscrepancyScreen';
 import { ComingSoonScreen } from './src/screens/ComingSoonScreen';
 import { BottomNavigation } from './src/components/BottomNavigation';
 import { COLORS } from './src/components/Theme';
@@ -44,6 +52,22 @@ function MainContainer() {
         return <ProductDetailScreen />;
       case 'shelf_map':
         return <ShelfMapScreen />;
+      case 'scan':
+        return <ScanScreen />;
+      case 'ai_suggestions':
+        return <AISuggestionScreen />;
+      case 'checkout_confirm':
+        return <CheckoutScreen />;
+      case 'qr_payment':
+        return <QRPaymentScreen />;
+      case 'invoice':
+        return <InvoiceScreen />;
+      case 'inspector_lookup':
+        return <InspectorLookupScreen />;
+      case 'inspector_check':
+        return <InspectorCheckScreen />;
+      case 'inspector_discrepancy':
+        return <InspectorDiscrepancyScreen />;
       default:
         // Phục vụ làm màn hình chờ/Coming soon cho các màn hình Giai đoạn sau
         return <ComingSoonScreen />;

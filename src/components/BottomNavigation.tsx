@@ -11,8 +11,17 @@ type IconName = React.ComponentProps<typeof Ionicons>['name'];
 export const BottomNavigation: React.FC = () => {
   const { currentScreen, cart, navigate, session } = useApp();
 
-  // If there's no session, do not render BottomNavigation
-  if (!session) return null;
+  // Hide BottomNavigation on checkout, payment, invoice, and inspector screens to prevent overlap
+  const hiddenScreens: ScreenName[] = [
+    'checkout_confirm',
+    'qr_payment',
+    'invoice',
+    'inspector_lookup',
+    'inspector_discrepancy',
+    'session_complete',
+  ];
+
+  if (!session || hiddenScreens.includes(currentScreen)) return null;
 
   const tabs: { key: TabKey; screen: ScreenName; label: string; icon: IconName }[] = [
     { key: 'home', screen: 'home', label: 'Trang chủ', icon: 'home-outline' },

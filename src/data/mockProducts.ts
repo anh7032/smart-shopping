@@ -116,6 +116,7 @@ export const mockProducts: Product[] = [
     shelf: 'Khu gia vị - Dãy C3 - Kệ số 2',
     stock: 40,
     description: 'Nước tương Chin-su hảo hạng thơm cay tỏi ớt tự nhiên, nâng tầm mọi món chiên xào chấm.',
+    image: require('../../nuoctuong.webp'),
     rating: 4.5,
   },
   {
@@ -127,6 +128,7 @@ export const mockProducts: Product[] = [
     shelf: 'Khu cá nhân - Dãy D1 - Kệ số 2',
     stock: 18,
     description: 'Kem đánh răng P/S Ngừa Sâu Răng Vượt Trội giúp bổ sung canxi siêu nhỏ bảo vệ nướu và giúp hơi thở thơm mát.',
+    image: require('../../kemdanhrang.webp'),
     rating: 4.4,
   },
   {
@@ -140,6 +142,7 @@ export const mockProducts: Product[] = [
     shelf: 'Khu gia dụng - Dãy E1 - Kệ số 1',
     stock: 15,
     description: 'Giấy vệ sinh Silkwell 3 lớp cao cấp làm từ bột giấy tự nhiên siêu mềm mịn, thấm hút tốt.',
+    image: require('../../giayvesinh.jpg'),
     rating: 4.6,
   },
   {
@@ -151,6 +154,7 @@ export const mockProducts: Product[] = [
     shelf: 'Khu hóa chất - Dãy E2 - Kệ số 4',
     stock: 25,
     description: 'Nước rửa chén Sunlight hương chanh tự nhiên giúp làm sạch dầu mỡ nhanh chóng, dịu nhẹ với da tay.',
+    image: require('../../sunlight.png'),
     rating: 4.8,
   },
   {
@@ -164,17 +168,19 @@ export const mockProducts: Product[] = [
     shelf: 'Khu ăn vặt - Dãy C4 - Kệ số 3',
     stock: 22,
     description: 'Snack khoai tây Pringles vị tự nhiên lát mỏng giòn ngon, đóng hộp tiện lợi giữ trọn hương vị.',
+    image: require('../../khoaitaychien.jpg'),
     rating: 4.5,
   },
   {
-    id: 'tra-xanh-o2',
+    id: 'tra-xanh-c2',
     barcode: '8930000000140',
-    name: 'Trà xanh O2 hương chanh',
+    name: 'Trà xanh C2 hương chanh',
     price: 10000,
     category: 'Đồ uống',
     shelf: 'Khu nước giải khát - Dãy B2 - Kệ số 3',
     stock: 50,
-    description: 'Trà xanh O2 thanh mát giải nhiệt cuộc sống chiết xuất từ lá trà tự nhiên kết hợp hương chanh tươi mát.',
+    description: 'Trà xanh C2 thanh mát giải nhiệt cuộc sống chiết xuất từ lá trà tự nhiên kết hợp hương chanh tươi mát.',
+    image: require('../../c2.webp'),
     rating: 4.2,
   },
   {
@@ -188,6 +194,7 @@ export const mockProducts: Product[] = [
     shelf: 'Khu cá nhân - Dãy D1 - Kệ số 1',
     stock: 35,
     description: 'Xà bông cục Lifebuoy diệt khuẩn bảo vệ vượt trội khỏi các loại vi khuẩn gây bệnh thông thường.',
+    image: require('../../xabong.jpg'),
     rating: 4.7,
   },
 ];

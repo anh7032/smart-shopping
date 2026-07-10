@@ -15,6 +15,7 @@ export type ScreenName =
   | 'payment_success'
   | 'invoice'
   | 'inspector_lookup'
+  | 'inspector_check'
   | 'inspector_discrepancy'
   | 'session_complete';
 
