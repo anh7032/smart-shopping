@@ -11,6 +11,7 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
+  Keyboard,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useApp } from '../context/AppContext';
@@ -45,7 +46,28 @@ export const AISuggestionScreen: React.FC = () => {
   ]);
   const [inputText, setInputText] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+  const [isKeyboardVisible, setKeyboardVisible] = useState(false);
   const scrollViewRef = useRef<ScrollView>(null);
+
+  // Keyboard show/hide listeners with smooth platform-specific event mapping
+  useEffect(() => {
+    const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
+    const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
+
+    const showSubscription = Keyboard.addListener(
+      showEvent,
+      () => setKeyboardVisible(true)
+    );
+    const hideSubscription = Keyboard.addListener(
+      hideEvent,
+      () => setKeyboardVisible(false)
+    );
+
+    return () => {
+      showSubscription.remove();
+      hideSubscription.remove();
+    };
+  }, []);
 
   // Auto scroll to bottom when messages change
   useEffect(() => {
@@ -136,7 +158,7 @@ export const AISuggestionScreen: React.FC = () => {
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       style={styles.screen}
-      keyboardVerticalOffset={80}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 80 : 0}
     >
       {/* Header */}
       <View style={styles.header}>
@@ -162,6 +184,7 @@ export const AISuggestionScreen: React.FC = () => {
       {/* Messages Scroll Area */}
       <ScrollView
         ref={scrollViewRef}
+        style={{ flex: 1 }}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
       >
@@ -253,7 +276,7 @@ export const AISuggestionScreen: React.FC = () => {
       </ScrollView>
 
       {/* Input area & Quick prompts */}
-      <View style={styles.bottomSection}>
+      <View style={[styles.bottomSection, isKeyboardVisible && { paddingBottom: 12 }]}>
         {/* Quick Prompts Chips scrollable */}
         <ScrollView
           horizontal
@@ -521,7 +544,8 @@ const styles = StyleSheet.create({
   },
   bottomSection: {
     backgroundColor: '#FFFFFF',
-    paddingVertical: 12,
+    paddingTop: 12,
+    paddingBottom: 88, // Pushes the input bar and prompt chips above the global BottomNavigation (height 76)
     paddingHorizontal: 16,
     borderTopWidth: 1,
     borderTopColor: COLORS.BORDER,

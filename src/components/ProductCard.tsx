@@ -63,22 +63,33 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           )}
         </View>
 
-        <Pressable
-          style={[styles.addButton, quantityInCart > 0 && styles.addedButton]}
-          onPress={(e) => {
-            e.stopPropagation();
-            onAdd();
-          }}
-        >
-          <Ionicons
-            name={quantityInCart > 0 ? 'checkmark' : 'add'}
-            size={12}
-            color={quantityInCart > 0 ? COLORS.DARK_GREEN : '#FFFFFF'}
-          />
-          <Text style={[styles.addButtonText, quantityInCart > 0 && styles.addedButtonText]}>
-            {quantityInCart > 0 ? `Đã thêm (${quantityInCart})` : 'Thêm giỏ'}
-          </Text>
-        </Pressable>
+        {/* Double Actions Row: Chi tiết & Quét mã */}
+        <View style={styles.buttonRow}>
+          <Pressable style={styles.detailButton} onPress={onPress}>
+            <Ionicons name="information-circle-outline" size={11} color={COLORS.GREEN} />
+            <Text style={styles.detailButtonText} numberOfLines={1}>Chi tiết</Text>
+          </Pressable>
+
+          <Pressable
+            style={[styles.scanButton, quantityInCart > 0 && styles.scannedButton]}
+            onPress={(e) => {
+              e.stopPropagation();
+              onAdd();
+            }}
+          >
+            <Ionicons
+              name={quantityInCart > 0 ? 'checkmark' : 'scan-outline'}
+              size={11}
+              color={quantityInCart > 0 ? COLORS.DARK_GREEN : '#FFFFFF'}
+            />
+            <Text
+              style={[styles.scanButtonText, quantityInCart > 0 && styles.scannedButtonText]}
+              numberOfLines={1}
+            >
+              {quantityInCart > 0 ? `Đã quét (${quantityInCart})` : 'Quét mã'}
+            </Text>
+          </Pressable>
+        </View>
       </View>
     </Pressable>
   );
@@ -173,27 +184,49 @@ const styles = StyleSheet.create({
     fontSize: 8,
     textDecorationLine: 'line-through',
   },
-  addButton: {
-    height: 30,
-    borderRadius: 15,
-    backgroundColor: COLORS.GREEN,
-    marginTop: 8,
+  buttonRow: {
+    flexDirection: 'row',
+    marginTop: 10,
+    gap: 5,
+  },
+  detailButton: {
+    flex: 1,
+    height: 28,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: COLORS.GREEN,
+    backgroundColor: '#FFFFFF',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 5,
+    gap: 2,
   },
-  addedButton: {
+  detailButtonText: {
+    color: COLORS.GREEN,
+    fontSize: 9,
+    fontWeight: '800',
+  },
+  scanButton: {
+    flex: 1.1,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: COLORS.GREEN,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 2,
+  },
+  scannedButton: {
     backgroundColor: '#F0FAF2',
     borderWidth: 1,
     borderColor: COLORS.GREEN,
   },
-  addButtonText: {
+  scanButtonText: {
     color: '#FFFFFF',
-    fontSize: 10,
+    fontSize: 9,
     fontWeight: '800',
   },
-  addedButtonText: {
+  scannedButtonText: {
     color: COLORS.DARK_GREEN,
   },
 });
