@@ -17,9 +17,10 @@ export type ScreenName =
   | 'inspector_lookup'
   | 'inspector_check'
   | 'inspector_discrepancy'
+  | 'manager_dashboard'
   | 'session_complete';
 
-export type UserRole = 'customer' | 'inspector';
+export type UserRole = 'customer' | 'vip' | 'inspector' | 'manager';
 
 export type Product = {
   id: string;
@@ -63,6 +64,7 @@ export type Receipt = {
   savings: number;
   paymentMethod: 'qr_bank' | 'e_wallet' | 'member_card';
   status: ReceiptStatus;
+  vipDiscount?: number; // Số tiền giảm giá dành cho hội viên VIP
   additionalPaymentNeeded?: number; // Số tiền cần thanh toán bổ sung khi chênh lệch
   additionalPaymentPaid?: boolean;
   checkedBy?: string; // Tên nhân viên kiểm soát

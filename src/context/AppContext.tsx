@@ -251,13 +251,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const checkout = async (paymentMethod: Receipt['paymentMethod']): Promise<Receipt> => {
     if (!session) throw new Error('Không có phiên mua sắm hoạt động.');
 
-    const totalPrice = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+    const originalTotalPrice = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
     const totalQuantity = cart.reduce((sum, item) => sum + item.quantity, 0);
     const savings = cart.reduce(
       (sum, item) =>
         sum + (item.oldPrice ? (item.oldPrice - item.price) * item.quantity : 0),
       0
     );
+
+    // Tính chiết khấu 5% cho thành viên VIP Hạng Tím
+    const vipDiscount = userRole === 'vip' ? Math.round(originalTotalPrice * 0.05) : 0;
+    const finalTotalPrice = originalTotalPrice - vipDiscount;
 
     const newReceipt: Receipt = {
       id: `HD-${Math.floor(100000 + Math.random() * 900000)}`,
@@ -266,10 +270,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       cartCode: session.cartCode,
       items: [...cart],
       totalQuantity,
-      totalPrice,
-      savings,
+      totalPrice: finalTotalPrice,
+      savings: savings + vipDiscount, // Ghi nhận tiền VIP giảm giá vào tiền tiết kiệm
       paymentMethod,
       status: 'paid',
+      vipDiscount: vipDiscount > 0 ? vipDiscount : undefined,
     };
 
     const newReceipts = [newReceipt, ...receipts];

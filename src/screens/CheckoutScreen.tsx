@@ -12,17 +12,20 @@ import { useApp } from '../context/AppContext';
 import { COLORS, SHADOW, TOP_INSET, money } from '../components/Theme';
 
 export const CheckoutScreen: React.FC = () => {
-  const { cart, session, navigate } = useApp();
+  const { cart, session, navigate, userRole } = useApp();
   const [paymentMethod, setPaymentMethod] = useState<'qr_bank' | 'e_wallet' | 'member_card'>('qr_bank');
   const [isConfirmed, setIsConfirmed] = useState(false);
 
-  const totalPrice = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const originalTotalPrice = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const totalQuantity = cart.reduce((sum, item) => sum + item.quantity, 0);
   const savings = cart.reduce(
     (sum, item) =>
       sum + (item.oldPrice ? (item.oldPrice - item.price) * item.quantity : 0),
     0
   );
+
+  const vipDiscount = userRole === 'vip' ? Math.round(originalTotalPrice * 0.05) : 0;
+  const totalPrice = originalTotalPrice - vipDiscount;
 
   const budget = session?.budget || 500000;
   const remaining = budget - totalPrice;
@@ -73,12 +76,18 @@ export const CheckoutScreen: React.FC = () => {
           <View style={styles.priceDetails}>
             <View style={styles.priceRow}>
               <Text style={styles.priceLabel}>Tạm tính ({totalQuantity} SP)</Text>
-              <Text style={styles.priceVal}>{money(totalPrice + savings)}</Text>
+              <Text style={styles.priceVal}>{money(totalPrice + savings + vipDiscount)}</Text>
             </View>
             <View style={styles.priceRow}>
               <Text style={styles.priceLabel}>Khuyến mãi giảm giá</Text>
               <Text style={[styles.priceVal, { color: COLORS.RED }]}>-{money(savings)}</Text>
             </View>
+            {userRole === 'vip' && (
+              <View style={styles.priceRow}>
+                <Text style={[styles.priceLabel, { color: '#7E22CE', fontWeight: '800' }]}>👑 Thẻ VIP Hạng Tím (Giảm 5%)</Text>
+                <Text style={[styles.priceVal, { color: '#7E22CE', fontWeight: '900' }]}>-{money(vipDiscount)}</Text>
+              </View>
+            )}
             <View style={[styles.priceRow, styles.totalRow]}>
               <Text style={styles.totalLabel}>TỔNG THANH TOÁN</Text>
               <Text style={styles.totalVal}>{money(totalPrice)}</Text>

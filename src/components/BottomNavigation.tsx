@@ -18,6 +18,7 @@ export const BottomNavigation: React.FC = () => {
     'invoice',
     'inspector_lookup',
     'inspector_discrepancy',
+    'manager_dashboard',
     'session_complete',
   ];
 

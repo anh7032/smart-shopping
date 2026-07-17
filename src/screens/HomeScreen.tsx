@@ -27,7 +27,7 @@ const categories: { label: string; icon: IconName; color: string }[] = [
 ];
 
 export const HomeScreen: React.FC = () => {
-  const { cart, session, navigate, addToCart } = useApp();
+  const { cart, session, navigate, addToCart, userRole } = useApp();
 
   const totalPrice = useMemo(
     () => cart.reduce((sum, item) => sum + item.price * item.quantity, 0),
@@ -69,7 +69,14 @@ export const HomeScreen: React.FC = () => {
         <View style={styles.homeHeader}>
           <View style={styles.headerTopRow}>
             <View>
-              <Text style={styles.welcomeSmall}>Xin chào,</Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                <Text style={styles.welcomeSmall}>Xin chào,</Text>
+                {userRole === 'vip' && (
+                  <View style={styles.vipBadgeSmall}>
+                    <Text style={styles.vipBadgeSmallText}>VIP HẠNG TÍM 👑</Text>
+                  </View>
+                )}
+              </View>
               <Text style={styles.welcomeName}>{session?.customerName || 'Khách hàng'}</Text>
             </View>
             <Pressable style={styles.notificationButton}>
@@ -310,6 +317,17 @@ const styles = StyleSheet.create({
     color: '#E8F6EA',
     fontSize: 12,
     fontWeight: '600',
+  },
+  vipBadgeSmall: {
+    backgroundColor: '#7E22CE', // Purple VIP badge
+    borderRadius: 8,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+  },
+  vipBadgeSmallText: {
+    color: '#FFFFFF',
+    fontSize: 8,
+    fontWeight: '900',
   },
   welcomeName: {
     color: '#FFFFFF',

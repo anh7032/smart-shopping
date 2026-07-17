@@ -17,10 +17,14 @@ export const WelcomeScreen: React.FC = () => {
     navigate('inspector_lookup');
   };
 
-  const handleScanMemberCard = () => {
-    // Simulated scanning member card
-    setRole('customer');
+  const handleStartAsVip = () => {
+    setRole('vip');
     navigate('session_init');
+  };
+
+  const handleStartAsManager = () => {
+    setRole('manager');
+    navigate('manager_dashboard');
   };
 
   return (
@@ -39,21 +43,28 @@ export const WelcomeScreen: React.FC = () => {
           <Text style={styles.primaryButtonText}>Tiếp tục với tư cách Khách</Text>
         </Pressable>
 
-        <Pressable style={[styles.button, styles.secondaryButton]} onPress={handleScanMemberCard}>
-          <Ionicons name="qr-code-outline" size={20} color={COLORS.GREEN} />
-          <Text style={styles.secondaryButtonText}>Quét thẻ thành viên</Text>
+        <Pressable style={[styles.button, styles.vipButton]} onPress={handleStartAsVip}>
+          <Ionicons name="ribbon-outline" size={20} color="#7E22CE" />
+          <Text style={styles.vipButtonText}>Thành viên VIP (Hạng Tím)</Text>
         </Pressable>
 
         <View style={styles.dividerRow}>
           <View style={styles.dividerLine} />
-          <Text style={styles.dividerText}>HOẶC</Text>
+          <Text style={styles.dividerText}>HỆ THỐNG PHÍA SAU</Text>
           <View style={styles.dividerLine} />
         </View>
 
-        <Pressable style={[styles.button, styles.inspectorButton]} onPress={handleStartAsInspector}>
-          <Ionicons name="shield-checkmark-outline" size={20} color={COLORS.MUTED} />
-          <Text style={styles.inspectorButtonText}>Khu vực Nhân viên kiểm soát</Text>
-        </Pressable>
+        <View style={styles.systemRow}>
+          <Pressable style={[styles.button, styles.inspectorHalfButton]} onPress={handleStartAsInspector}>
+            <Ionicons name="shield-checkmark-outline" size={16} color={COLORS.MUTED} />
+            <Text style={styles.inspectorHalfButtonText}>Kiểm soát viên</Text>
+          </Pressable>
+
+          <Pressable style={[styles.button, styles.managerHalfButton]} onPress={handleStartAsManager}>
+            <Ionicons name="bar-chart-outline" size={16} color="#0D9488" />
+            <Text style={styles.managerHalfButtonText}>Quản lý siêu thị</Text>
+          </Pressable>
+        </View>
       </View>
 
       <View style={styles.footer}>
@@ -121,13 +132,13 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     fontSize: 15,
   },
-  secondaryButton: {
+  vipButton: {
     backgroundColor: '#FFFFFF',
     borderWidth: 1.5,
-    borderColor: COLORS.GREEN,
+    borderColor: '#7E22CE', // Purple VIP card border
   },
-  secondaryButtonText: {
-    color: COLORS.GREEN,
+  vipButtonText: {
+    color: '#7E22CE', // Purple text
     fontWeight: '800',
     fontSize: 15,
   },
@@ -143,20 +154,39 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.BORDER,
   },
   dividerText: {
-    fontSize: 11,
+    fontSize: 10,
     color: COLORS.MUTED,
     paddingHorizontal: 10,
-    fontWeight: '700',
+    fontWeight: '800',
+    letterSpacing: 0.5,
   },
-  inspectorButton: {
+  systemRow: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  inspectorHalfButton: {
+    flex: 1,
     backgroundColor: '#FFFFFF',
     borderWidth: 1,
     borderColor: COLORS.BORDER,
+    height: 48,
   },
-  inspectorButtonText: {
+  inspectorHalfButtonText: {
     color: COLORS.MUTED,
     fontWeight: '700',
-    fontSize: 14,
+    fontSize: 12,
+  },
+  managerHalfButton: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#0D9488', // Teal Store Manager border
+    height: 48,
+  },
+  managerHalfButtonText: {
+    color: '#0D9488', // Teal text
+    fontWeight: '700',
+    fontSize: 12,
   },
   footer: {
     alignItems: 'center',

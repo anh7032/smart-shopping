@@ -18,6 +18,7 @@ import { InvoiceScreen } from './src/screens/InvoiceScreen';
 import { InspectorLookupScreen } from './src/screens/InspectorLookupScreen';
 import { InspectorCheckScreen } from './src/screens/InspectorCheckScreen';
 import { InspectorDiscrepancyScreen } from './src/screens/InspectorDiscrepancyScreen';
+import { ManagerDashboardScreen } from './src/screens/ManagerDashboardScreen';
 import { ComingSoonScreen } from './src/screens/ComingSoonScreen';
 import { BottomNavigation } from './src/components/BottomNavigation';
 import { COLORS } from './src/components/Theme';
@@ -68,6 +69,8 @@ function MainContainer() {
         return <InspectorCheckScreen />;
       case 'inspector_discrepancy':
         return <InspectorDiscrepancyScreen />;
+      case 'manager_dashboard':
+        return <ManagerDashboardScreen />;
       default:
         // Phục vụ làm màn hình chờ/Coming soon cho các màn hình Giai đoạn sau
         return <ComingSoonScreen />;

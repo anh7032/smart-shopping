@@ -148,8 +148,14 @@ export const InvoiceScreen: React.FC = () => {
               </View>
               <View style={styles.summaryRow}>
                 <Text style={styles.summaryLabel}>Tiết kiệm giảm giá:</Text>
-                <Text style={[styles.summaryValue, { color: COLORS.RED }]}>-{money(receipt.savings)}</Text>
+                <Text style={[styles.summaryValue, { color: COLORS.RED }]}>-{money(receipt.savings - (receipt.vipDiscount || 0))}</Text>
               </View>
+              {receipt.vipDiscount && (
+                <View style={styles.summaryRow}>
+                  <Text style={[styles.summaryLabel, { color: '#7E22CE', fontWeight: '800' }]}>Chiết khấu VIP Hạng Tím:</Text>
+                  <Text style={[styles.summaryValue, { color: '#7E22CE', fontWeight: '800' }]}>-{money(receipt.vipDiscount)}</Text>
+                </View>
+              )}
               <View style={[styles.summaryRow, styles.finalTotalRow]}>
                 <Text style={styles.finalTotalLabel}>TỔNG THANH TOÁN:</Text>
                 <Text style={styles.finalTotalValue}>{money(receipt.totalPrice)}</Text>

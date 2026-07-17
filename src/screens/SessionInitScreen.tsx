@@ -18,8 +18,8 @@ import { COLORS, SHADOW } from '../components/Theme';
 const BUDGET_PRESETS = [200000, 500000, 1000000, 2000000];
 
 export const SessionInitScreen: React.FC = () => {
-  const { startSession, navigate } = useApp();
-  const [customerName, setCustomerName] = useState('Khách hàng');
+  const { startSession, navigate, userRole } = useApp();
+  const [customerName, setCustomerName] = useState(userRole === 'vip' ? 'Hội viên VIP' : 'Khách hàng');
   const [cartCode, setCartCode] = useState(`CART-${Math.floor(100 + Math.random() * 900)}`);
   const [budget, setBudget] = useState(500000);
   const [customBudgetInput, setCustomBudgetInput] = useState('');
@@ -63,6 +63,12 @@ export const SessionInitScreen: React.FC = () => {
         </View>
 
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+          {userRole === 'vip' && (
+            <View style={styles.vipRibbon}>
+              <Ionicons name="ribbon" size={18} color="#FFFFFF" />
+              <Text style={styles.vipRibbonText}>ĐÃ KẾT NỐI: THÀNH VIÊN VIP HẠNG TÍM 👑</Text>
+            </View>
+          )}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Thông tin cá nhân & Xe đẩy</Text>
 
@@ -198,6 +204,24 @@ const styles = StyleSheet.create({
   scrollContent: {
     padding: 16,
     paddingBottom: 40,
+  },
+  vipRibbon: {
+    backgroundColor: '#7E22CE', // Purple VIP theme color
+    borderRadius: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    marginBottom: 16,
+    ...SHADOW,
+  },
+  vipRibbonText: {
+    color: '#FFFFFF',
+    fontWeight: '900',
+    fontSize: 12,
+    letterSpacing: 0.5,
   },
   section: {
     backgroundColor: '#FFFFFF',
