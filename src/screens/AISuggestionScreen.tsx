@@ -36,14 +36,7 @@ const QUICK_PROMPTS = [
 
 export const AISuggestionScreen: React.FC = () => {
   const { addToCart, navigate, cart } = useApp();
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: 'welcome',
-      sender: 'ai',
-      text: 'Xin chào! Tôi là Trợ lý ảo SmartCart AI. 🤖\n\nTôi có thể giúp bạn lên thực đơn món ăn, gợi ý bữa sáng tiện lợi, hoặc đề xuất sản phẩm tiết kiệm ngân sách hôm nay! Hãy thử gõ tin nhắn hoặc chọn một trong các gợi ý nhanh bên dưới nhé.',
-      timestamp: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
-    },
-  ]);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [inputText, setInputText] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [isKeyboardVisible, setKeyboardVisible] = useState(false);
@@ -68,6 +61,31 @@ export const AISuggestionScreen: React.FC = () => {
       hideSubscription.remove();
     };
   }, []);
+
+  // Dynamically generate the greeting based on the active cart and history!
+  useEffect(() => {
+    let welcomeText = 'Xin chào! Tôi là Trợ lý ảo SmartCart AI. 🤖\n\nTôi có thể giúp bạn lên thực đơn, gợi ý bữa ăn tiện lợi, hoặc đề xuất sản phẩm tiết kiệm hôm nay! Hãy gõ tin nhắn hoặc bấm các gợi ý nhanh bên dưới nhé.';
+    
+    const cartIds = cart.map(item => item.id);
+    if (cartIds.includes('thit-bo-uc')) {
+      welcomeText += '\n\n💡 Tôi phát hiện bạn đang có *Thịt bò Úc* trong giỏ hàng. Bạn có muốn nấu món **Ba chỉ bò xào rau cải xanh** không? Tôi khuyên bạn mua kèm *Rau cải xanh organic (Dãy A3 - Kệ số 2)* để có bữa tối hoàn hảo nhé!';
+    } else if (cartIds.includes('sua-tuoi-th')) {
+      welcomeText += '\n\n💡 Tôi thấy giỏ hàng của bạn đang có *Sữa tươi TH True Milk*. Bạn có muốn kết hợp cùng *Ngũ cốc ăn sáng dinh dưỡng (Dãy C2)* để có bữa sáng bơ sữa thơm ngon tràn đầy năng lượng không?';
+    } else if (cartIds.includes('khoai-tay-ong-pringles')) {
+      welcomeText += '\n\n💡 Thật tuyệt khi nhâm nhi bánh khoai tây! Bạn có muốn mua kèm *Trà xanh C2 hương chanh (Dãy B2)* để ăn kèm giải nhiệt thanh mát không?';
+    } else if (cart.length > 0) {
+      welcomeText += `\n\n💡 Hiện giỏ hàng của bạn đang có ${cart.length} sản phẩm. Bạn có thể bấm sang tab "Giỏ hàng" để xem trực tiếp các gợi ý mua sắm thông minh cá nhân hóa của AI nhé!`;
+    }
+
+    setMessages([
+      {
+        id: 'welcome',
+        sender: 'ai',
+        text: welcomeText,
+        timestamp: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
+      }
+    ]);
+  }, [cart]);
 
   // Auto scroll to bottom when messages change
   useEffect(() => {

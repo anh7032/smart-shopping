@@ -10,11 +10,12 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useApp } from '../context/AppContext';
-import { CartItem } from '../types';
+import { CartItem, Product } from '../types';
+import { mockProducts } from '../data/mockProducts';
 import { COLORS, SHADOW, TOP_INSET, money } from '../components/Theme';
 
 export const CartScreen: React.FC = () => {
-  const { cart, session, changeQuantity, removeFromCart, navigate } = useApp();
+  const { cart, session, changeQuantity, removeFromCart, navigate, addToCart } = useApp();
 
   const totalPrice = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const totalQuantity = cart.reduce((sum, item) => sum + item.quantity, 0);
@@ -26,6 +27,94 @@ export const CartScreen: React.FC = () => {
 
   const budget = session?.budget || 500000;
   const remaining = budget - totalPrice;
+
+  const aiRecommendations = React.useMemo(() => {
+    const recommendedList: { product: Product; reason: string; confidence: number }[] = [];
+    const cartIds = cart.map((item) => item.id);
+
+    // Helper to find a product in mockProducts
+    const getProduct = (id: string) => mockProducts.find((p) => p.id === id);
+
+    // Rule 1: Sữa tươi TH True Milk (sua-tuoi-th) -> suggest Ngũ cốc (ngu-coc-an-sang)
+    if (cartIds.includes('sua-tuoi-th') && !cartIds.includes('ngu-coc-an-sang')) {
+      const prod = getProduct('ngu-coc-an-sang');
+      if (prod) {
+        recommendedList.push({
+          product: prod,
+          reason: 'Thường mua cùng sữa tươi TH True Milk',
+          confidence: 95,
+        });
+      }
+    }
+
+    // Rule 2: Thịt bò Úc (thit-bo-uc) -> suggest Rau cải organic (rau-cai-organic)
+    if (cartIds.includes('thit-bo-uc') && !cartIds.includes('rau-cai-organic')) {
+      const prod = getProduct('rau-cai-organic');
+      if (prod) {
+        recommendedList.push({
+          product: prod,
+          reason: 'Gợi ý kết hợp nấu món Bò xào rau cải xanh',
+          confidence: 91,
+        });
+      }
+    }
+
+    // Rule 3: Khoai tây chiên (khoai-tay-ong-pringles) -> suggest Trà xanh C2 (tra-xanh-c2)
+    if (cartIds.includes('khoai-tay-ong-pringles') && !cartIds.includes('tra-xanh-c2')) {
+      const prod = getProduct('tra-xanh-c2');
+      if (prod) {
+        recommendedList.push({
+          product: prod,
+          reason: 'Combo ăn vặt giòn rụm & giải nhiệt cực đã',
+          confidence: 88,
+        });
+      }
+    }
+
+    // Rule 4: Dựa trên lịch sử mua sắm của hội viên
+    if (session?.userType === 'member' && session.shoppingHistory) {
+      // If history has organic vegetables and soy sauce is not in cart
+      if (session.shoppingHistory.includes('rau-cai-organic') && !cartIds.includes('nuoc-tuong-chinsu')) {
+        const prod = getProduct('nuoc-tuong-chinsu');
+        if (prod && !recommendedList.some((r) => r.product.id === prod.id)) {
+          recommendedList.push({
+            product: prod,
+            reason: 'Dựa trên lịch sử mua rau cải xào của bạn',
+            confidence: 89,
+          });
+        }
+      }
+
+      // If history has Sữa tươi and Sandwich is not in cart
+      if (session.shoppingHistory.includes('sua-tuoi-th') && !cartIds.includes('banh-mi-sandwich')) {
+        const prod = getProduct('banh-mi-sandwich');
+        if (prod && !recommendedList.some((r) => r.product.id === prod.id)) {
+          recommendedList.push({
+            product: prod,
+            reason: 'Gợi ý bữa sáng dinh dưỡng bơ sữa tuyệt ngon',
+            confidence: 92,
+          });
+        }
+      }
+    }
+
+    // Rule 5: Fallback promotions (Nếu giỏ hàng có ít gợi ý, thêm các sản phẩm đang có discount cao)
+    if (recommendedList.length < 3) {
+      const promos = mockProducts
+        .filter((p) => p.discount !== undefined && !cartIds.includes(p.id) && !recommendedList.some((r) => r.product.id === p.id))
+        .slice(0, 3 - recommendedList.length);
+      
+      promos.forEach((p) => {
+        recommendedList.push({
+          product: p,
+          reason: `Ưu đãi siêu sốc hôm nay giảm ${p.discount}%`,
+          confidence: 82,
+        });
+      });
+    }
+
+    return recommendedList;
+  }, [cart, session]);
 
   const handleCheckout = () => {
     if (cart.length === 0) {
@@ -108,6 +197,57 @@ export const CartScreen: React.FC = () => {
                 {remaining < 0 ? ' (vượt mức)' : ''}
               </Text>
             </View>
+          </View>
+        )}
+
+        {/* AI Smart Recommendation Panel */}
+        {aiRecommendations.length > 0 && (
+          <View style={styles.aiPanel}>
+            <View style={styles.aiPanelHeader}>
+              <View style={styles.aiPanelTitleRow}>
+                <Ionicons name="sparkles" size={16} color="#7E22CE" />
+                <Text style={styles.aiPanelTitle}>Gợi ý mua kèm từ AI</Text>
+              </View>
+              <Text style={styles.aiPanelSub}>Dựa trên giỏ hàng & lịch sử thành viên</Text>
+            </View>
+
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.aiPanelScroll}>
+              {aiRecommendations.map(({ product, reason, confidence }) => (
+                <View key={product.id} style={styles.aiCard}>
+                  <View style={styles.aiMatchBadge}>
+                    <Text style={styles.aiMatchText}>🔥 {confidence}% Match</Text>
+                  </View>
+
+                  {product.image ? (
+                    <Image source={product.image} style={styles.aiProductImage} />
+                  ) : (
+                    <View style={styles.aiProductImagePlaceholder}>
+                      <Ionicons name="image-outline" size={24} color="#A6B3A9" />
+                    </View>
+                  )}
+
+                  <View style={styles.aiProductInfo}>
+                    <Text style={styles.aiProductName} numberOfLines={1}>
+                      {product.name}
+                    </Text>
+                    <Text style={styles.aiProductPrice}>{money(product.price)}</Text>
+                    <Text style={styles.aiProductReason} numberOfLines={2}>
+                      {reason}
+                    </Text>
+                  </View>
+
+                  <Pressable
+                    style={styles.aiNavBtn}
+                    onPress={() => {
+                      navigate('shelf_map', { product });
+                    }}
+                  >
+                    <Ionicons name="compass-outline" size={14} color="#FFFFFF" />
+                    <Text style={styles.aiNavBtnText}>Xem vị trí</Text>
+                  </Pressable>
+                </View>
+              ))}
+            </ScrollView>
           </View>
         )}
       </ScrollView>
@@ -457,6 +597,116 @@ const styles = StyleSheet.create({
   checkoutButtonText: {
     color: '#FFFFFF',
     fontSize: 14,
+    fontWeight: '800',
+  },
+  aiPanel: {
+    marginTop: 18,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: '#E6E6FA',
+    ...SHADOW,
+  },
+  aiPanelHeader: {
+    marginBottom: 12,
+  },
+  aiPanelTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  aiPanelTitle: {
+    fontSize: 15,
+    fontWeight: '900',
+    color: COLORS.TEXT,
+  },
+  aiPanelSub: {
+    fontSize: 11,
+    color: COLORS.MUTED,
+    marginTop: 2,
+  },
+  aiPanelScroll: {
+    gap: 12,
+    paddingRight: 10,
+    paddingBottom: 4,
+  },
+  aiCard: {
+    width: 150,
+    backgroundColor: '#FCFCFF',
+    borderWidth: 1,
+    borderColor: '#EFEFFF',
+    borderRadius: 14,
+    padding: 8,
+    position: 'relative',
+    ...SHADOW,
+  },
+  aiMatchBadge: {
+    position: 'absolute',
+    top: 6,
+    left: 6,
+    backgroundColor: 'rgba(126, 34, 206, 0.9)',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 6,
+    zIndex: 10,
+  },
+  aiMatchText: {
+    color: '#FFFFFF',
+    fontSize: 8,
+    fontWeight: '900',
+  },
+  aiProductImage: {
+    width: '100%',
+    height: 90,
+    borderRadius: 10,
+    resizeMode: 'cover',
+  },
+  aiProductImagePlaceholder: {
+    width: '100%',
+    height: 90,
+    borderRadius: 10,
+    backgroundColor: '#EDF1EE',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  aiProductInfo: {
+    marginTop: 6,
+    flex: 1,
+    minHeight: 65,
+  },
+  aiProductName: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: COLORS.TEXT,
+  },
+  aiProductPrice: {
+    fontSize: 13,
+    fontWeight: '900',
+    color: COLORS.DARK_GREEN,
+    marginTop: 2,
+  },
+  aiProductReason: {
+    fontSize: 9,
+    fontWeight: '600',
+    color: '#6B21A8',
+    marginTop: 4,
+    lineHeight: 12,
+  },
+  aiNavBtn: {
+    backgroundColor: '#7E22CE',
+    borderRadius: 8,
+    height: 30,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 4,
+    marginTop: 8,
+    ...SHADOW,
+  },
+  aiNavBtnText: {
+    color: '#FFFFFF',
+    fontSize: 10,
     fontWeight: '800',
   },
 });
