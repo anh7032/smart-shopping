@@ -113,7 +113,7 @@ export const HomeScreen: React.FC = () => {
 
           {/* Banner with background image */}
           <ImageBackground
-            source={require('../../background.png')}
+            source={require('../../image/background.png')}
             style={styles.promoBanner}
             imageStyle={styles.promoBannerImage}
           >

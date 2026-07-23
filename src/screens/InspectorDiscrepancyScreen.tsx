@@ -173,7 +173,7 @@ export const InspectorDiscrepancyScreen: React.FC = () => {
             {/* Render z8027 QR Code Image */}
             <View style={styles.qrWrapper}>
               <Image
-                source={require('../../z8027286543607_f5dac330b54064fa54e2a405e41d795a.jpg')}
+                source={require('../../image/z8027286543607_f5dac330b54064fa54e2a405e41d795a.jpg')}
                 style={styles.qrImage}
               />
             </View>

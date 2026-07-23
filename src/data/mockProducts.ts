@@ -10,7 +10,7 @@ export const mockProducts: Product[] = [
     shelf: 'Khu thực phẩm tươi - Dãy A3 - Kệ số 2',
     stock: 25,
     description: 'Rau cải xanh được trồng theo phương pháp hữu cơ hoàn toàn tự nhiên, không chứa thuốc trừ sâu, giàu vitamin và chất xơ.',
-    image: require('../../rauxanh.jpg'),
+    image: require('../../image/rauxanh.jpg'),
     rating: 4.8,
     badge: 'Organic',
   },
@@ -25,7 +25,7 @@ export const mockProducts: Product[] = [
     shelf: 'Khu đồ uống - Dãy B1 - Kệ số 4',
     stock: 15,
     description: 'Nước cam tươi nguyên chất 100% được vắt trực tiếp trong ngày, không đường hóa học, cung cấp vitamin C dồi dào.',
-    image: require('../../cam.png'),
+    image: require('../../image/cam.png'),
     rating: 4.6,
   },
   {
@@ -39,7 +39,7 @@ export const mockProducts: Product[] = [
     shelf: 'Khu thực phẩm tươi - Tủ đông C1',
     stock: 8,
     description: 'Thịt ba chỉ bò Úc nhập khẩu chất lượng cao, giữ lạnh tươi ngon, thái lát phù hợp cho lẩu hoặc nướng.',
-    image: require('../../ba-chi-bo.webp'),
+    image: require('../../image/ba-chi-bo.webp'),
     rating: 4.7,
     badge: 'Bán chạy',
   },
@@ -54,7 +54,7 @@ export const mockProducts: Product[] = [
     shelf: 'Khu mỹ phẩm - Dãy D2 - Kệ số 3',
     stock: 20,
     description: 'Dầu gội dưỡng tóc Pantene ngăn ngừa hư tổn, đem lại mái tóc suôn mượt óng ả suốt cả ngày dài.',
-    image: require('../../dau-goi-pantene-ngan-rung-toc1.jpg'),
+    image: require('../../image/dau-goi-pantene-ngan-rung-toc1.jpg'),
     rating: 4.5,
   },
   {
@@ -68,7 +68,7 @@ export const mockProducts: Product[] = [
     shelf: 'Khu thực phẩm tươi - Dãy A1 - Kệ số 5',
     stock: 12,
     description: 'Cà chua bi đỏ ngọt mát, quả mọng chứa nhiều chất chống oxy hóa tự nhiên, thích hợp ăn sống hoặc làm salad.',
-    image: require('../../cachua.jpg'),
+    image: require('../../image/cachua.jpg'),
     rating: 4.4,
   },
   {
@@ -80,7 +80,7 @@ export const mockProducts: Product[] = [
     shelf: 'Khu sữa - Dãy B2 - Kệ số 1',
     stock: 30,
     description: 'Sữa tươi tiệt trùng TH True Milk nguyên chất ít đường, bổ sung dưỡng chất thiết yếu cho xương khớp khỏe mạnh.',
-    image: require('../../thtruemilk.jpg'),
+    image: require('../../image/thtruemilk.jpg'),
     rating: 4.7,
   },
   {
@@ -92,7 +92,7 @@ export const mockProducts: Product[] = [
     shelf: 'Khu bánh mì - Dãy A4 - Kệ số 1',
     stock: 10,
     description: 'Bánh mì sandwich gối nướng bơ sữa thơm ngon mềm mại, thích hợp làm bữa sáng nhanh chóng tiện lợi.',
-    image: require('../../goi.webp'),
+    image: require('../../image/goi.webp'),
     rating: 4.3,
   },
   {
@@ -104,7 +104,7 @@ export const mockProducts: Product[] = [
     shelf: 'Khu đồ khô - Dãy C2 - Kệ số 1',
     stock: 14,
     description: 'Ngũ cốc bắp nướng giòn rụm, giàu vitamin nhóm B và khoáng chất, hoàn hảo khi kết hợp cùng sữa tươi TH True Milk.',
-    image: require('../../ngũ cốc.jpg'),
+    image: require('../../image/ngũ cốc.jpg'),
     rating: 4.2,
   },
   {
@@ -116,7 +116,7 @@ export const mockProducts: Product[] = [
     shelf: 'Khu gia vị - Dãy C3 - Kệ số 2',
     stock: 40,
     description: 'Nước tương Chin-su hảo hạng thơm cay tỏi ớt tự nhiên, nâng tầm mọi món chiên xào chấm.',
-    image: require('../../nuoctuong.webp'),
+    image: require('../../image/nuoctuong.webp'),
     rating: 4.5,
   },
   {
@@ -128,7 +128,7 @@ export const mockProducts: Product[] = [
     shelf: 'Khu cá nhân - Dãy D1 - Kệ số 2',
     stock: 18,
     description: 'Kem đánh răng P/S Ngừa Sâu Răng Vượt Trội giúp bổ sung canxi siêu nhỏ bảo vệ nướu và giúp hơi thở thơm mát.',
-    image: require('../../kemdanhrang.webp'),
+    image: require('../../image/kemdanhrang.webp'),
     rating: 4.4,
   },
   {
@@ -142,7 +142,7 @@ export const mockProducts: Product[] = [
     shelf: 'Khu gia dụng - Dãy E1 - Kệ số 1',
     stock: 15,
     description: 'Giấy vệ sinh Silkwell 3 lớp cao cấp làm từ bột giấy tự nhiên siêu mềm mịn, thấm hút tốt.',
-    image: require('../../giayvesinh.jpg'),
+    image: require('../../image/giayvesinh.jpg'),
     rating: 4.6,
   },
   {
@@ -154,7 +154,7 @@ export const mockProducts: Product[] = [
     shelf: 'Khu hóa chất - Dãy E2 - Kệ số 4',
     stock: 25,
     description: 'Nước rửa chén Sunlight hương chanh tự nhiên giúp làm sạch dầu mỡ nhanh chóng, dịu nhẹ với da tay.',
-    image: require('../../sunlight.png'),
+    image: require('../../image/sunlight.png'),
     rating: 4.8,
   },
   {
@@ -168,7 +168,7 @@ export const mockProducts: Product[] = [
     shelf: 'Khu ăn vặt - Dãy C4 - Kệ số 3',
     stock: 22,
     description: 'Snack khoai tây Pringles vị tự nhiên lát mỏng giòn ngon, đóng hộp tiện lợi giữ trọn hương vị.',
-    image: require('../../khoaitaychien.jpg'),
+    image: require('../../image/khoaitaychien.jpg'),
     rating: 4.5,
   },
   {
@@ -180,7 +180,7 @@ export const mockProducts: Product[] = [
     shelf: 'Khu nước giải khát - Dãy B2 - Kệ số 3',
     stock: 50,
     description: 'Trà xanh C2 thanh mát giải nhiệt cuộc sống chiết xuất từ lá trà tự nhiên kết hợp hương chanh tươi mát.',
-    image: require('../../c2.webp'),
+    image: require('../../image/c2.webp'),
     rating: 4.2,
   },
   {
@@ -194,7 +194,7 @@ export const mockProducts: Product[] = [
     shelf: 'Khu cá nhân - Dãy D1 - Kệ số 1',
     stock: 35,
     description: 'Xà bông cục Lifebuoy diệt khuẩn bảo vệ vượt trội khỏi các loại vi khuẩn gây bệnh thông thường.',
-    image: require('../../xabong.jpg'),
+    image: require('../../image/xabong.jpg'),
     rating: 4.7,
   },
 ];
