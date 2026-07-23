@@ -12,7 +12,7 @@ import { useApp } from '../context/AppContext';
 import { COLORS, SHADOW, TOP_INSET, money } from '../components/Theme';
 
 export const InvoiceScreen: React.FC = () => {
-  const { currentReceipt, navigate, setRole } = useApp();
+  const { currentReceipt, navigate, setRole, session } = useApp();
 
   const receipt = currentReceipt;
 
@@ -160,6 +160,15 @@ export const InvoiceScreen: React.FC = () => {
                 <Text style={styles.finalTotalLabel}>TỔNG THANH TOÁN:</Text>
                 <Text style={styles.finalTotalValue}>{money(receipt.totalPrice)}</Text>
               </View>
+
+              {session?.userType === 'member' && (
+                <View style={[styles.summaryRow, { marginTop: 6, paddingTop: 6, borderTopWidth: 1, borderTopColor: '#F0F4F1', borderStyle: 'dashed' }]}>
+                  <Text style={[styles.summaryLabel, { color: COLORS.DARK_GREEN, fontWeight: '800' }]}>Tích lũy SmartCart:</Text>
+                  <Text style={[styles.summaryValue, { color: COLORS.DARK_GREEN, fontWeight: '800' }]}>
+                    {session.loyaltyPoints}đ (+{Math.floor(receipt.totalPrice / 1000)}đ)
+                  </Text>
+                </View>
+              )}
             </View>
 
             <View style={styles.dividerDotted} />
@@ -240,7 +249,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     padding: 16,
-    paddingBottom: 50,
+    paddingBottom: 120,
   },
   receiptContainer: {
     backgroundColor: '#FFFFFF',

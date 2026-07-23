@@ -69,11 +69,16 @@ export const HomeScreen: React.FC = () => {
         <View style={styles.homeHeader}>
           <View style={styles.headerTopRow}>
             <View>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
                 <Text style={styles.welcomeSmall}>Xin chào,</Text>
                 {userRole === 'vip' && (
                   <View style={styles.vipBadgeSmall}>
                     <Text style={styles.vipBadgeSmallText}>VIP HẠNG TÍM 👑</Text>
+                  </View>
+                )}
+                {session?.userType === 'member' && (
+                  <View style={[styles.vipBadgeSmall, { backgroundColor: COLORS.LIGHT_GREEN, borderColor: '#C3E6CB' }]}>
+                    <Text style={[styles.vipBadgeSmallText, { color: COLORS.DARK_GREEN }]}>Hội viên: {session.loyaltyPoints}đ</Text>
                   </View>
                 )}
               </View>

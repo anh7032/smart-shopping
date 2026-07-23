@@ -17,6 +17,7 @@ export const BottomNavigation: React.FC = () => {
     'qr_payment',
     'invoice',
     'inspector_lookup',
+    'inspector_check',
     'inspector_discrepancy',
     'manager_dashboard',
     'session_complete',
