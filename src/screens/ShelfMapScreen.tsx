@@ -11,9 +11,38 @@ import { Ionicons } from '@expo/vector-icons';
 import { useApp } from '../context/AppContext';
 import { COLORS, SHADOW, TOP_INSET } from '../components/Theme';
 
+const NAVIGATION_STEPS: Record<string, string[]> = {
+  ZONE_A: [
+    'Đi thẳng 15m dọc hành lang chính từ lối vào.',
+    'Rẽ trái tại bảng hiệu "Khu Thực phẩm Tươi".',
+    'Đi tiếp 20m, tìm kệ A3 tầng 2 bên phải của bạn.',
+  ],
+  ZONE_B: [
+    'Đi thẳng 15m dọc hành lang chính từ lối vào.',
+    'Rẽ trái tại biển chỉ dẫn "Sữa & Đồ uống".',
+    'Đi tiếp 20m, tìm kệ sữa B2 bên trái (vị trí Shelf Level 2).',
+  ],
+  ZONE_C: [
+    'Đi thẳng 20m dọc hành lang chính từ lối vào.',
+    'Rẽ phải tại biển "Khu đồ khô & gia vị".',
+    'Sản phẩm ở dãy C2, kệ số 1 bên trái của bạn.',
+  ],
+  ZONE_D: [
+    'Đi thẳng 18m dọc hành lang chính từ lối vào.',
+    'Rẽ phải tại biển "Khu cá nhân & mỹ phẩm".',
+    'Sản phẩm ở dãy D1, kệ số 2, tầng 2 bên tay phải.',
+  ],
+  ZONE_E: [
+    'Rẽ phải ngay khi vừa bước qua Cổng vào.',
+    'Đi tiếp 8m dọc theo lối đi Khu Gia dụng.',
+    'Sản phẩm ở dãy E1, kệ số 1 bên tay trái.',
+  ],
+};
+
 export const ShelfMapScreen: React.FC = () => {
   const { selectedProduct, navigate } = useApp();
-  const [isNavigating, setIsNavigating] = useState(false);
+  const [navState, setNavState] = useState<'idle' | 'navigating' | 'arrived'>('idle');
+  const [currentStepIndex, setCurrentStepIndex] = useState(0);
 
   const product = selectedProduct;
 
@@ -49,13 +78,45 @@ export const ShelfMapScreen: React.FC = () => {
     return 'ZONE_C'; // Đồ khô / Khác
   }, [product.category]);
 
+  const steps = useMemo(() => {
+    return NAVIGATION_STEPS[destinationBlock] || [
+      'Đi thẳng 15m từ lối vào dọc hành lang chính.',
+      'Đi tiếp về phía bảng chỉ dẫn sản phẩm.',
+      'Đến vị trí sản phẩm quầy hàng.',
+    ];
+  }, [destinationBlock]);
+
+  const dynamicStats = useMemo(() => {
+    if (navState === 'idle') {
+      return { distance: 35, time: 45 };
+    }
+    if (navState === 'arrived') {
+      return { distance: 0, time: 0 };
+    }
+    // navState === 'navigating'
+    const totalSteps = steps.length;
+    const remainingSteps = totalSteps - currentStepIndex;
+    return {
+      distance: Math.max(5, Math.round((remainingSteps / totalSteps) * 35)),
+      time: Math.max(10, Math.round((remainingSteps / totalSteps) * 45)),
+    };
+  }, [navState, currentStepIndex, steps]);
+
   const handleStartNav = () => {
-    setIsNavigating(true);
-    Alert.alert(
-      'Hệ thống chỉ đường khởi chạy',
-      `Đã kích hoạt định vị dẫn hướng AR giả lập tới ${product.name} tại ${shelfDetails.row}. Khoảng cách khoảng 25m.`,
-      [{ text: 'Đồng ý', onPress: () => setIsNavigating(false) }]
-    );
+    setNavState('navigating');
+    setCurrentStepIndex(0);
+  };
+
+  const handleNextStep = () => {
+    if (currentStepIndex < steps.length - 1) {
+      setCurrentStepIndex(currentStepIndex + 1);
+    } else {
+      setNavState('arrived');
+    }
+  };
+
+  const handleSkipToDestination = () => {
+    setNavState('arrived');
   };
 
   return (
@@ -85,12 +146,12 @@ export const ShelfMapScreen: React.FC = () => {
           <View style={styles.destStats}>
             <View style={styles.statBox}>
               <Text style={styles.statLabel}>KHOẢNG CÁCH</Text>
-              <Text style={styles.statValue}>~25 mét</Text>
+              <Text style={styles.statValue}>~{dynamicStats.distance} mét</Text>
             </View>
             <View style={styles.statDivider} />
             <View style={styles.statBox}>
               <Text style={styles.statLabel}>THỜI GIAN ĐI</Text>
-              <Text style={styles.statValue}>~45 giây</Text>
+              <Text style={styles.statValue}>~{dynamicStats.time} giây</Text>
             </View>
             <View style={styles.statDivider} />
             <View style={styles.statBox}>
@@ -189,11 +250,67 @@ export const ShelfMapScreen: React.FC = () => {
           </View>
         </View>
 
-        {/* Navigate Button */}
-        <Pressable style={styles.startNavButton} onPress={handleStartNav}>
-          <Ionicons name="compass-outline" size={20} color="#FFFFFF" />
-          <Text style={styles.startNavText}>Bắt đầu chỉ đường AR giả lập</Text>
-        </Pressable>
+        {/* Navigation Step Panel or Start Button */}
+        {navState === 'idle' && (
+          <Pressable style={styles.startNavButton} onPress={handleStartNav}>
+            <Ionicons name="compass-outline" size={20} color="#FFFFFF" />
+            <Text style={styles.startNavText}>Bắt đầu chỉ đường AR giả lập</Text>
+          </Pressable>
+        )}
+
+        {navState === 'navigating' && (
+          <View style={styles.navPanel}>
+            <View style={styles.navPanelHeader}>
+              <Ionicons name="compass" size={20} color={COLORS.GREEN} />
+              <Text style={styles.navPanelTitle}>
+                Hướng dẫn di chuyển (Bước {currentStepIndex + 1}/{steps.length})
+              </Text>
+            </View>
+
+            <View style={styles.navStepRow}>
+              <View style={styles.stepNumCircle}>
+                <Text style={styles.stepNumText}>{currentStepIndex + 1}</Text>
+              </View>
+              <Text style={styles.stepDescriptionText}>{steps[currentStepIndex]}</Text>
+            </View>
+
+            <View style={styles.navPanelButtons}>
+              <Pressable style={styles.skipNavBtn} onPress={handleSkipToDestination}>
+                <Text style={styles.skipNavBtnText}>Đến nơi luôn</Text>
+              </Pressable>
+
+              <Pressable style={styles.nextStepBtn} onPress={handleNextStep}>
+                <Text style={styles.nextStepBtnText}>
+                  {currentStepIndex === steps.length - 1 ? 'Hoàn tất' : 'Bước tiếp theo'}
+                </Text>
+                <Ionicons name="arrow-forward" size={14} color="#FFFFFF" />
+              </Pressable>
+            </View>
+          </View>
+        )}
+
+        {navState === 'arrived' && (
+          <View style={[styles.navPanel, styles.arrivedPanel]}>
+            <View style={styles.navPanelHeader}>
+              <Ionicons name="checkmark-circle" size={22} color={COLORS.GREEN} />
+              <Text style={[styles.navPanelTitle, { color: COLORS.DARK_GREEN }]}>Bạn đã đến vị trí sản phẩm!</Text>
+            </View>
+            <Text style={styles.arrivedDesc}>
+              Sản phẩm <Text style={{ fontWeight: '800' }}>{product.name}</Text> nằm ngay trước mặt bạn tại <Text style={{ fontWeight: '800' }}>{shelfDetails.row} • {shelfDetails.shelfNo} (Tầng 2)</Text>.
+            </Text>
+
+            <View style={styles.navPanelButtons}>
+              <Pressable style={styles.backToProductBtn} onPress={() => navigate('product_detail', { product })}>
+                <Text style={styles.backToProductBtnText}>Xem chi tiết</Text>
+              </Pressable>
+
+              <Pressable style={styles.scanNowBtn} onPress={() => navigate('scan')}>
+                <Ionicons name="scan" size={16} color="#FFFFFF" />
+                <Text style={styles.scanNowBtnText}>Quét mã thêm vào giỏ</Text>
+              </Pressable>
+            </View>
+          </View>
+        )}
       </ScrollView>
     </View>
   );
@@ -231,7 +348,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     padding: 16,
-    paddingBottom: 40,
+    paddingBottom: 120,
   },
   destinationCard: {
     backgroundColor: '#FFFFFF',
@@ -598,5 +715,132 @@ const styles = StyleSheet.create({
     borderLeftWidth: 1.5,
     borderTopWidth: 0,
     borderRightWidth: 0,
+  },
+  // Phase 1 Navigation Panel Styles
+  navPanel: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 18,
+    borderWidth: 1.5,
+    borderColor: COLORS.BORDER,
+    padding: 16,
+    marginTop: 14,
+    ...SHADOW,
+  },
+  arrivedPanel: {
+    borderColor: COLORS.GREEN,
+    backgroundColor: '#F4FCF6',
+  },
+  navPanelHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F0F4F1',
+    paddingBottom: 10,
+    marginBottom: 12,
+  },
+  navPanelTitle: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: COLORS.TEXT,
+  },
+  navStepRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    marginBottom: 16,
+  },
+  stepNumCircle: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: COLORS.GREEN,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  stepNumText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '900',
+  },
+  stepDescriptionText: {
+    flex: 1,
+    fontSize: 13,
+    fontWeight: '700',
+    color: COLORS.TEXT,
+    lineHeight: 18,
+  },
+  navPanelButtons: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  skipNavBtn: {
+    flex: 1,
+    height: 44,
+    borderRadius: 12,
+    borderWidth: 1.5,
+    borderColor: COLORS.BORDER,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#FFFFFF',
+  },
+  skipNavBtnText: {
+    color: COLORS.MUTED,
+    fontSize: 13,
+    fontWeight: '800',
+  },
+  nextStepBtn: {
+    flex: 1.5,
+    height: 44,
+    borderRadius: 12,
+    backgroundColor: COLORS.GREEN,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    ...SHADOW,
+  },
+  nextStepBtnText: {
+    color: '#FFFFFF',
+    fontSize: 13,
+    fontWeight: '800',
+  },
+  arrivedDesc: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: COLORS.TEXT,
+    lineHeight: 20,
+    marginBottom: 16,
+  },
+  backToProductBtn: {
+    flex: 1,
+    height: 44,
+    borderRadius: 12,
+    borderWidth: 1.5,
+    borderColor: COLORS.BORDER,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#FFFFFF',
+  },
+  backToProductBtnText: {
+    color: COLORS.TEXT,
+    fontSize: 13,
+    fontWeight: '800',
+  },
+  scanNowBtn: {
+    flex: 1.5,
+    height: 44,
+    borderRadius: 12,
+    backgroundColor: COLORS.GREEN,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    ...SHADOW,
+  },
+  scanNowBtnText: {
+    color: '#FFFFFF',
+    fontSize: 13,
+    fontWeight: '800',
   },
 });
