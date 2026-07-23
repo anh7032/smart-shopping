@@ -22,6 +22,11 @@ export const WelcomeScreen: React.FC = () => {
     navigate('session_init');
   };
 
+  const handleStartAsRegister = () => {
+    setRole('register');
+    navigate('session_init');
+  };
+
   const handleStartAsManager = () => {
     setRole('manager');
     navigate('manager_dashboard');
@@ -46,6 +51,11 @@ export const WelcomeScreen: React.FC = () => {
         <Pressable style={[styles.button, styles.vipButton]} onPress={handleStartAsVip}>
           <Ionicons name="ribbon-outline" size={20} color="#7E22CE" />
           <Text style={styles.vipButtonText}>Thành viên VIP (Hạng Tím)</Text>
+        </Pressable>
+
+        <Pressable style={[styles.button, styles.registerButton]} onPress={handleStartAsRegister}>
+          <Ionicons name="person-add-outline" size={20} color="#0D9488" />
+          <Text style={styles.registerButtonText}>Đăng ký hội viên mới</Text>
         </Pressable>
 
         <View style={styles.dividerRow}>
@@ -187,6 +197,16 @@ const styles = StyleSheet.create({
     color: '#0D9488', // Teal text
     fontWeight: '700',
     fontSize: 12,
+  },
+  registerButton: {
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1.5,
+    borderColor: '#0D9488', // Teal border
+  },
+  registerButtonText: {
+    color: '#0D9488', // Teal text
+    fontWeight: '800',
+    fontSize: 15,
   },
   footer: {
     alignItems: 'center',

@@ -20,7 +20,7 @@ export type ScreenName =
   | 'manager_dashboard'
   | 'session_complete';
 
-export type UserRole = 'customer' | 'vip' | 'inspector' | 'manager';
+export type UserRole = 'customer' | 'vip' | 'inspector' | 'manager' | 'register';
 
 export type Product = {
   id: string;

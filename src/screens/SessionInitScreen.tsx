@@ -39,13 +39,17 @@ const MOCK_MEMBERS = [
 
 export const SessionInitScreen: React.FC = () => {
   const { startSession, navigate, userRole, setRole } = useApp();
-  const [userType, setUserType] = useState<'member' | 'guest'>(userRole === 'vip' ? 'member' : 'guest');
+  const [userType, setUserType] = useState<'member' | 'guest'>(userRole === 'vip' || userRole === 'register' ? 'member' : 'guest');
   const [memberId, setMemberId] = useState('');
   const [memberPoints, setMemberPoints] = useState(0);
   const [memberHistory, setMemberHistory] = useState<string[]>([]);
   const [customerId, setCustomerId] = useState<string | null>(null);
   const [memberLoaded, setMemberLoaded] = useState(false);
   const [isSearchingMember, setIsSearchingMember] = useState(false);
+  const [memberNotFound, setMemberNotFound] = useState(false);
+  const [showRegisterForm, setShowRegisterForm] = useState(false);
+  const [registerName, setRegisterName] = useState('');
+  const [registerEmail, setRegisterEmail] = useState('');
 
   const [customerName, setCustomerName] = useState(userRole === 'vip' ? 'Nguyễn Văn A' : 'Khách hàng');
   const [cartCode, setCartCode] = useState(`CART-${Math.floor(100 + Math.random() * 900)}`);
@@ -53,9 +57,9 @@ export const SessionInitScreen: React.FC = () => {
   const [customBudgetInput, setCustomBudgetInput] = useState('');
   const [isCustomBudget, setIsCustomBudget] = useState(false);
 
-  // Automatically load Nguyễn Văn A if they started as VIP (Hạng Tím)
+  // Automatically load Nguyễn Văn A if they started as VIP (Hạng Tím), or pre-open registration if they clicked register
   React.useEffect(() => {
-    const autoLoadVip = async () => {
+    const autoLoadVipOrRegister = async () => {
       if (userRole === 'vip') {
         let membersList = MOCK_MEMBERS;
         try {
@@ -74,9 +78,14 @@ export const SessionInitScreen: React.FC = () => {
         setMemberHistory(defaultVip.history);
         setMemberLoaded(true);
         setMemberId(defaultVip.phone);
+      } else if (userRole === 'register') {
+        setUserType('member');
+        setShowRegisterForm(true);
+        setMemberNotFound(true);
+        setCustomerName('');
       }
     };
-    autoLoadVip();
+    autoLoadVipOrRegister();
   }, [userRole]);
 
   const handleMemberLookup = async () => {
@@ -87,6 +96,8 @@ export const SessionInitScreen: React.FC = () => {
     }
 
     setIsSearchingMember(true);
+    setMemberNotFound(false);
+    setShowRegisterForm(false);
 
     let membersList = MOCK_MEMBERS;
     try {
@@ -114,17 +125,63 @@ export const SessionInitScreen: React.FC = () => {
         setMemberHistory(found.history);
         setMemberLoaded(true);
         Alert.alert(
-          'Xác thái thành công 🎉',
+          'Xác thực thành công 🎉',
           `Chào mừng ${found.name} quay trở lại! Điểm tích lũy hiện tại: ${found.points}.`
         );
       } else {
-        Alert.alert(
-          'Không tìm thấy',
-          'Không tìm thấy thông tin hội viên này. Vui lòng nhập SĐT demo: 0987654321 hoặc 0912345678 để thử.'
-        );
+        setMemberNotFound(true);
         setMemberLoaded(false);
       }
     }, 800);
+  };
+
+  const handleRegisterMember = async () => {
+    const trimmedName = registerName.trim();
+    if (!trimmedName) {
+      Alert.alert('Thông tin thiếu', 'Vui lòng nhập Họ và tên để đăng ký hội viên.');
+      return;
+    }
+
+    let membersList = MOCK_MEMBERS;
+    try {
+      const stored = await AsyncStorage.getItem('@smart_shopping_members');
+      if (stored) {
+        membersList = JSON.parse(stored);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+
+    const newId = `MB-${Math.floor(1000 + Math.random() * 9000)}`;
+    const newMember = {
+      id: newId,
+      phone: memberId.trim(),
+      email: registerEmail.trim() || `${newId.toLowerCase()}@smartcart.vn`,
+      name: trimmedName,
+      points: 50, // Welcome bonus points!
+      history: [],
+    };
+
+    const updatedMembersList = [...membersList, newMember];
+    try {
+      await AsyncStorage.setItem('@smart_shopping_members', JSON.stringify(updatedMembersList));
+      setCustomerName(newMember.name);
+      setCustomerId(newMember.id);
+      setMemberPoints(newMember.points);
+      setMemberHistory(newMember.history);
+      setMemberLoaded(true);
+      setMemberNotFound(false);
+      setShowRegisterForm(false);
+      setRegisterName('');
+      setRegisterEmail('');
+      Alert.alert(
+        'Đăng ký thành công 🎉',
+        `Chào mừng Hội viên mới ${newMember.name}!\nBạn đã nhận được quà tặng chào mừng: 50đ điểm tích lũy.`
+      );
+    } catch (e) {
+      console.error('Lỗi lưu đăng ký mới:', e);
+      Alert.alert('Lỗi đăng ký', 'Không thể hoàn tất đăng ký hội viên lúc này.');
+    }
   };
 
   const handleStartSession = async () => {
@@ -181,39 +238,21 @@ export const SessionInitScreen: React.FC = () => {
         </View>
 
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
-          {/* Segmented Control Guest/Member */}
-          <View style={styles.segmentContainer}>
-            <Pressable
-              style={[styles.segmentBtn, userType === 'guest' && styles.segmentBtnActive]}
-              onPress={() => {
-                setUserType('guest');
-                setCustomerName('Khách hàng');
-                setMemberLoaded(false);
-              }}
-            >
-              <Ionicons name="person-outline" size={16} color={userType === 'guest' ? '#FFFFFF' : COLORS.MUTED} />
-              <Text style={[styles.segmentText, userType === 'guest' && styles.segmentTextActive]}>Guest Mode (Khách)</Text>
-            </Pressable>
-            <Pressable
-              style={[styles.segmentBtn, userType === 'member' && styles.segmentBtnActive]}
-              onPress={() => {
-                setUserType('member');
-                if (memberLoaded) {
-                  setCustomerName(customerName);
-                } else {
-                  setCustomerName('Thành viên');
-                }
-              }}
-            >
-              <Ionicons name="ribbon-outline" size={16} color={userType === 'member' ? '#FFFFFF' : COLORS.MUTED} />
-              <Text style={[styles.segmentText, userType === 'member' && styles.segmentTextActive]}>Member Mode (Hội viên)</Text>
-            </Pressable>
-          </View>
-
-          {userRole === 'vip' && (
-            <View style={styles.vipRibbon}>
-              <Ionicons name="ribbon" size={18} color="#FFFFFF" />
-              <Text style={styles.vipRibbonText}>ĐÃ KẾT NỐI: THÀNH VIÊN VIP HẠNG TÍM 👑</Text>
+          {/* Locked Mode Banner based on selection */}
+          {userRole === 'register' ? (
+            <View style={[styles.lockedModeBanner, { backgroundColor: '#0D9488' }]}>
+              <Ionicons name="person-add" size={20} color="#FFFFFF" />
+              <Text style={styles.lockedModeText}>ĐĂNG KÝ HỘI VIÊN MỚI SMARTCART 🌟</Text>
+            </View>
+          ) : userRole === 'vip' ? (
+            <View style={[styles.lockedModeBanner, { backgroundColor: '#7E22CE' }]}>
+              <Ionicons name="ribbon" size={20} color="#FFFFFF" />
+              <Text style={styles.lockedModeText}>MEMBER MODE (VIP THÀNH VIÊN) 👑</Text>
+            </View>
+          ) : (
+            <View style={[styles.lockedModeBanner, { backgroundColor: COLORS.GREEN }]}>
+              <Ionicons name="person" size={20} color="#FFFFFF" />
+              <Text style={styles.lockedModeText}>GUEST MODE (KHÁCH MUA SẮM) 👤</Text>
             </View>
           )}
 
@@ -253,26 +292,109 @@ export const SessionInitScreen: React.FC = () => {
                   </View>
                 </View>
               )}
+
+              {memberNotFound && !showRegisterForm && (
+                <View style={styles.registerPromptBox}>
+                  <Ionicons name="alert-circle" size={24} color={COLORS.RED} />
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.registerPromptTitle}>SĐT chưa đăng ký hội viên</Text>
+                    <Text style={styles.registerPromptSub}>
+                      Số điện thoại "{memberId}" chưa có tài khoản. Bạn có muốn đăng ký hội viên mới ngay không?
+                    </Text>
+                    <Pressable
+                      style={styles.registerPromptBtn}
+                      onPress={() => setShowRegisterForm(true)}
+                    >
+                      <Text style={styles.registerPromptBtnText}>Đăng ký hội viên mới</Text>
+                      <Ionicons name="person-add" size={14} color="#FFFFFF" />
+                    </Pressable>
+                  </View>
+                </View>
+              )}
+
+              {showRegisterForm && (
+                <View style={styles.registerFormBox}>
+                  <Text style={styles.registerFormTitle}>Đăng ký hội viên SmartCart mới</Text>
+                  <Text style={styles.registerFormSub}>Điền tên và email để nhận 50đ điểm thưởng chào mừng!</Text>
+                  
+                  <View style={styles.registerFormInputGroup}>
+                    <Text style={styles.registerFormLabel}>Họ và tên *</Text>
+                    <View style={styles.registerFormInputWrapper}>
+                      <Ionicons name="person-outline" size={16} color={COLORS.MUTED} />
+                      <TextInput
+                        style={styles.registerFormInput}
+                        placeholder="Nhập họ và tên..."
+                        placeholderTextColor="#A1AEA5"
+                        value={registerName}
+                        onChangeText={setRegisterName}
+                      />
+                    </View>
+                  </View>
+
+                  <View style={styles.registerFormInputGroup}>
+                    <Text style={styles.registerFormLabel}>Địa chỉ Email (Tùy chọn)</Text>
+                    <View style={styles.registerFormInputWrapper}>
+                      <Ionicons name="mail-outline" size={16} color={COLORS.MUTED} />
+                      <TextInput
+                        style={styles.registerFormInput}
+                        placeholder="Nhập email của bạn..."
+                        placeholderTextColor="#A1AEA5"
+                        value={registerEmail}
+                        onChangeText={setRegisterEmail}
+                        keyboardType="email-address"
+                      />
+                    </View>
+                  </View>
+
+                  <View style={styles.registerFormBtnRow}>
+                    <Pressable
+                      style={styles.registerFormCancelBtn}
+                      onPress={() => {
+                        setShowRegisterForm(false);
+                        setMemberNotFound(false);
+                      }}
+                    >
+                      <Text style={styles.registerFormCancelText}>Hủy</Text>
+                    </Pressable>
+
+                    <Pressable style={styles.registerFormSubmitBtn} onPress={handleRegisterMember}>
+                      <Text style={styles.registerFormSubmitText}>Xác nhận đăng ký</Text>
+                    </Pressable>
+                  </View>
+                </View>
+              )}
             </View>
           )}
 
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Thông tin cá nhân & Xe đẩy</Text>
 
-            {/* Customer Name */}
-            <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Tên của bạn (Tùy chọn)</Text>
-              <View style={styles.inputWrapper}>
-                <Ionicons name="person-outline" size={18} color={COLORS.MUTED} />
-                <TextInput
-                  style={styles.input}
-                  placeholder="Nhập tên của bạn..."
-                  placeholderTextColor="#A1AEA5"
-                  value={customerName}
-                  onChangeText={setCustomerName}
-                />
+            {/* Customer Name - Only editable for Guest mode, for Member show read-only verified name */}
+            {userType === 'guest' ? (
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Tên của bạn (Tùy chọn)</Text>
+                <View style={styles.inputWrapper}>
+                  <Ionicons name="person-outline" size={18} color={COLORS.MUTED} />
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Nhập tên của bạn..."
+                    placeholderTextColor="#A1AEA5"
+                    value={customerName}
+                    onChangeText={setCustomerName}
+                  />
+                </View>
               </View>
-            </View>
+            ) : (
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Hội viên sử dụng xe đẩy</Text>
+                <View style={[styles.inputWrapper, { backgroundColor: '#EFEFEF' }]}>
+                  <Ionicons name="checkmark-circle-outline" size={18} color={COLORS.GREEN} />
+                  <Text style={{ fontSize: 14, fontWeight: '700', color: COLORS.TEXT }}>
+                    {customerName || 'Đang xác thực...'}
+                  </Text>
+                </View>
+              </View>
+            )}
 
             {/* Cart Code */}
             <View style={styles.inputGroup}>
@@ -620,5 +742,143 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: COLORS.MUTED,
     marginTop: 2,
+  },
+  // Phase 1 Lock Banner & Register Form Styles
+  lockedModeBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    marginBottom: 16,
+    gap: 8,
+    ...SHADOW,
+  },
+  lockedModeText: {
+    color: '#FFFFFF',
+    fontWeight: '900',
+    fontSize: 13,
+    letterSpacing: 0.5,
+  },
+  registerPromptBox: {
+    flexDirection: 'row',
+    gap: 12,
+    backgroundColor: '#FFF5F5',
+    borderWidth: 1,
+    borderColor: '#FFA8A8',
+    borderRadius: 12,
+    padding: 12,
+    marginTop: 10,
+  },
+  registerPromptTitle: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: COLORS.RED,
+  },
+  registerPromptSub: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: COLORS.MUTED,
+    marginTop: 2,
+    lineHeight: 18,
+  },
+  registerPromptBtn: {
+    backgroundColor: COLORS.GREEN,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    gap: 6,
+    marginTop: 8,
+    ...SHADOW,
+  },
+  registerPromptBtnText: {
+    color: '#FFFFFF',
+    fontSize: 11,
+    fontWeight: '800',
+  },
+  registerFormBox: {
+    backgroundColor: '#FAFCFA',
+    borderWidth: 1,
+    borderColor: '#C3E6CB',
+    borderRadius: 12,
+    padding: 14,
+    marginTop: 12,
+  },
+  registerFormTitle: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: COLORS.DARK_GREEN,
+  },
+  registerFormSub: {
+    fontSize: 11,
+    color: COLORS.MUTED,
+    marginTop: 2,
+    marginBottom: 12,
+  },
+  registerFormInputGroup: {
+    marginBottom: 10,
+  },
+  registerFormLabel: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: COLORS.TEXT,
+    marginBottom: 4,
+  },
+  registerFormInputWrapper: {
+    height: 40,
+    borderRadius: 8,
+    borderWidth: 1.5,
+    borderColor: COLORS.BORDER,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 10,
+    gap: 6,
+    backgroundColor: '#FFFFFF',
+  },
+  registerFormInput: {
+    flex: 1,
+    fontSize: 13,
+    color: COLORS.TEXT,
+    fontWeight: '600',
+    height: '100%',
+  },
+  registerFormBtnRow: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    gap: 10,
+    marginTop: 14,
+  },
+  registerFormCancelBtn: {
+    height: 36,
+    borderRadius: 8,
+    borderWidth: 1.5,
+    borderColor: COLORS.BORDER,
+    paddingHorizontal: 14,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+  },
+  registerFormCancelText: {
+    color: COLORS.MUTED,
+    fontSize: 12,
+    fontWeight: '800',
+  },
+  registerFormSubmitBtn: {
+    height: 36,
+    borderRadius: 8,
+    backgroundColor: COLORS.GREEN,
+    paddingHorizontal: 14,
+    justifyContent: 'center',
+    alignItems: 'center',
+    ...SHADOW,
+  },
+  registerFormSubmitText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '800',
   },
 });
