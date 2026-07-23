@@ -49,6 +49,10 @@ export type SessionState = {
   initialBudget: number;
   startedAt?: string;
   customerName?: string;
+  userType: 'member' | 'guest';
+  customerId: string | null;
+  shoppingHistory: string[]; // danh sách sản phẩm đã mua
+  loyaltyPoints: number; // điểm tích lũy
 };
 
 export type ReceiptStatus = 'paid' | 'checked' | 'discrepancy';

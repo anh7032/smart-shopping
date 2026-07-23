@@ -18,7 +18,15 @@ interface AppContextProps {
   // Actions
   setRole: (role: UserRole) => void;
   navigate: (screen: ScreenName, params?: { product?: Product; category?: string; receipt?: Receipt }) => void;
-  startSession: (customerName: string, cartCode: string, budget: number) => Promise<void>;
+  startSession: (
+    customerName: string,
+    cartCode: string,
+    budget: number,
+    userType?: 'member' | 'guest',
+    customerId?: string | null,
+    loyaltyPoints?: number,
+    shoppingHistory?: string[]
+  ) => Promise<void>;
   endSession: () => Promise<void>;
   updateBudget: (budget: number) => Promise<void>;
   addToCart: (product: Product, quantity?: number) => Promise<void>;
@@ -67,6 +75,30 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         if (storedScreen) setCurrentScreen(JSON.parse(storedScreen) as ScreenName);
         if (storedReceipts) setReceipts(JSON.parse(storedReceipts));
         if (storedCurrentReceipt) setCurrentReceipt(JSON.parse(storedCurrentReceipt));
+
+        // Khởi tạo database hội viên ảo trong AsyncStorage nếu chưa có
+        const storedMembers = await AsyncStorage.getItem('@smart_shopping_members');
+        if (!storedMembers) {
+          const defaultMembers = [
+            {
+              id: 'MB-0382',
+              phone: '0987654321',
+              email: 'nguyenvana@smartcart.vn',
+              name: 'Nguyễn Văn A',
+              points: 350,
+              history: ['rau-cai-organic', 'sua-tuoi-th'],
+            },
+            {
+              id: 'MB-8921',
+              phone: '0912345678',
+              email: 'tranvanb@smartcart.vn',
+              name: 'Trần Văn B',
+              points: 820,
+              history: ['nuoc-cam-ep', 'thit-bo-uc'],
+            },
+          ];
+          await AsyncStorage.setItem('@smart_shopping_members', JSON.stringify(defaultMembers));
+        }
       } catch (error) {
         console.error('Lỗi tải dữ liệu từ AsyncStorage:', error);
       } finally {
@@ -108,14 +140,26 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
-  const startSession = async (customerName: string, cartCode: string, budget: number) => {
+  const startSession = async (
+    customerName: string,
+    cartCode: string,
+    budget: number,
+    userType: 'member' | 'guest' = 'guest',
+    customerId: string | null = null,
+    loyaltyPoints = 0,
+    shoppingHistory: string[] = []
+  ) => {
     const newSession: SessionState = {
       cartCode: cartCode || `CART-${Math.floor(100 + Math.random() * 900)}`,
       isConnected: true,
       budget,
       initialBudget: budget,
       startedAt: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
-      customerName: customerName || 'Khách hàng',
+      customerName: customerName || (userType === 'member' ? 'Thành viên SmartCart' : 'Khách hàng'),
+      userType,
+      customerId,
+      loyaltyPoints,
+      shoppingHistory,
     };
 
     setSession(newSession);
@@ -276,6 +320,38 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       status: 'paid',
       vipDiscount: vipDiscount > 0 ? vipDiscount : undefined,
     };
+
+    // Tính điểm tích lũy mới nếu là Member
+    let earnedPoints = 0;
+    if (session.userType === 'member') {
+      earnedPoints = Math.floor(finalTotalPrice / 1000); // 1 điểm cho mỗi 1000đ
+      const updatedSession: SessionState = {
+        ...session,
+        loyaltyPoints: session.loyaltyPoints + earnedPoints,
+        // Cập nhật lịch sử mua hàng với các sản phẩm vừa mua
+        shoppingHistory: Array.from(new Set([...session.shoppingHistory, ...cart.map(item => item.id)]))
+      };
+      setSession(updatedSession);
+      await saveState(STORAGE_KEYS.SESSION, updatedSession);
+
+      // Cập nhật điểm và lịch sử của thành viên trong cơ sở dữ liệu hội viên ảo persisted
+      try {
+        const storedMembers = await AsyncStorage.getItem('@smart_shopping_members');
+        if (storedMembers) {
+          const membersList = JSON.parse(storedMembers);
+          const memberIndex = membersList.findIndex((m: any) => m.id === session.customerId);
+          if (memberIndex !== -1) {
+            membersList[memberIndex].points += earnedPoints;
+            membersList[memberIndex].history = Array.from(
+              new Set([...membersList[memberIndex].history, ...cart.map((item) => item.id)])
+            );
+            await AsyncStorage.setItem('@smart_shopping_members', JSON.stringify(membersList));
+          }
+        }
+      } catch (e) {
+        console.error('Lỗi cập nhật điểm hội viên:', e);
+      }
+    }
 
     const newReceipts = [newReceipt, ...receipts];
     setReceipts(newReceipts);
