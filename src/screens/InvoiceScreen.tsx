@@ -43,14 +43,8 @@ export const InvoiceScreen: React.FC = () => {
   };
 
   const handleGoToCheckpoint = () => {
-    // Chuyển sang vai trò Nhân viên kiểm soát để thực hiện bước đối chiếu
-    setRole('inspector');
-    // Truyền receipt sang cho inspector_lookup đối chiếu trực tiếp!
-    navigate('inspector_lookup', { receipt });
-    Alert.alert(
-      'Chuyển sang quầy kiểm soát',
-      'Bạn đã chuyển sang vai trò Nhân viên kiểm soát siêu thị để đối chiếu sản phẩm trong giỏ hàng thực tế với hóa đơn này.'
-    );
+    // Chuyển sang màn hình xác thực lối ra của khách hàng
+    navigate('exit_verification');
   };
 
   const getMethodName = (method: string) => {

@@ -18,6 +18,8 @@ export type ScreenName =
   | 'inspector_check'
   | 'inspector_discrepancy'
   | 'manager_dashboard'
+  | 'exit_verification'
+  | 'verification_result'
   | 'session_complete';
 
 export type UserRole = 'customer' | 'vip' | 'inspector' | 'manager' | 'register';

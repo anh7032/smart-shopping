@@ -20,6 +20,8 @@ import { InspectorCheckScreen } from './src/screens/InspectorCheckScreen';
 import { InspectorDiscrepancyScreen } from './src/screens/InspectorDiscrepancyScreen';
 import { ManagerDashboardScreen } from './src/screens/ManagerDashboardScreen';
 import { ComingSoonScreen } from './src/screens/ComingSoonScreen';
+import { ExitVerificationScreen } from './src/screens/ExitVerificationScreen';
+import { VerificationResultScreen } from './src/screens/VerificationResultScreen';
 import { BottomNavigation } from './src/components/BottomNavigation';
 import { COLORS } from './src/components/Theme';
 
@@ -63,6 +65,10 @@ function MainContainer() {
         return <QRPaymentScreen />;
       case 'invoice':
         return <InvoiceScreen />;
+      case 'exit_verification':
+        return <ExitVerificationScreen />;
+      case 'verification_result':
+        return <VerificationResultScreen />;
       case 'inspector_lookup':
         return <InspectorLookupScreen />;
       case 'inspector_check':
