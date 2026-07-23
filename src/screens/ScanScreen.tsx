@@ -21,12 +21,25 @@ export const ScanScreen: React.FC = () => {
   const [manualCode, setManualCode] = useState('');
   const [scannedProduct, setScannedProduct] = useState<Product | null>(null);
   const [scanQty, setScanQty] = useState(1);
+  const [scanState, setScanState] = useState<'IDLE' | 'SUCCESS' | 'NOT_FOUND' | 'ERROR'>('IDLE');
+  const [failedBarcode, setFailedBarcode] = useState('');
 
   // Search product by barcode
   const handleBarcodeSearch = (code: string) => {
-    const trimmed = code.trim();
+    let trimmed = code.trim();
     if (!trimmed) {
-      Alert.alert('Nhập mã', 'Vui lòng nhập mã barcode hoặc quét mã.');
+      setScanState('ERROR');
+      return;
+    }
+
+    // Support MILK001 barcode simulation
+    if (trimmed.toUpperCase() === 'MILK001') {
+      trimmed = '8930000000065'; // Map to TH True Milk barcode
+    }
+
+    // Trigger error connection mockup
+    if (trimmed === 'ERROR_CONNECTION') {
+      setScanState('ERROR');
       return;
     }
 
@@ -34,11 +47,11 @@ export const ScanScreen: React.FC = () => {
     if (product) {
       setScannedProduct(product);
       setScanQty(1);
+      setScanState('SUCCESS');
     } else {
-      Alert.alert(
-        'Lỗi quét mã',
-        `Mã sản phẩm "${trimmed}" không tồn tại trong hệ thống siêu thị.`
-      );
+      setFailedBarcode(trimmed);
+      setScannedProduct(null);
+      setScanState('NOT_FOUND');
     }
   };
 
@@ -67,6 +80,7 @@ export const ScanScreen: React.FC = () => {
           onPress: () => {
             setScannedProduct(null);
             setManualCode('');
+            setScanState('IDLE');
           },
         },
         {
@@ -74,6 +88,7 @@ export const ScanScreen: React.FC = () => {
           onPress: () => {
             setScannedProduct(null);
             setManualCode('');
+            setScanState('IDLE');
             navigate('cart');
           },
         },
@@ -92,13 +107,13 @@ export const ScanScreen: React.FC = () => {
         <View style={{ width: 35 }} />
       </View>
 
-      <View style={styles.content}>
-        {scannedProduct ? (
-          /* Scanned Product Modal/Detail View */
+      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        {/* SUCCESS STATE */}
+        {scanState === 'SUCCESS' && scannedProduct && (
           <View style={styles.scannedCard}>
             <View style={styles.scannedHeader}>
               <Ionicons name="checkmark-circle" size={24} color={COLORS.GREEN} />
-              <Text style={styles.scannedHeaderTitle}>Quét thành công!</Text>
+              <Text style={styles.scannedHeaderTitle}>Tìm thấy sản phẩm!</Text>
             </View>
 
             <View style={styles.scannedProductRow}>
@@ -114,7 +129,7 @@ export const ScanScreen: React.FC = () => {
                   {scannedProduct.name}
                 </Text>
                 <Text style={styles.scannedProductShelf}>
-                  Kệ: {scannedProduct.shelf.split(' - ')[1] || scannedProduct.shelf}
+                  Vị trí: {scannedProduct.shelf}
                 </Text>
                 <Text style={styles.scannedProductPrice}>
                   {money(scannedProduct.price)}
@@ -148,6 +163,7 @@ export const ScanScreen: React.FC = () => {
                 onPress={() => {
                   setScannedProduct(null);
                   setManualCode('');
+                  setScanState('IDLE');
                 }}
               >
                 <Text style={styles.scannedCancelText}>Quét lại</Text>
@@ -157,8 +173,78 @@ export const ScanScreen: React.FC = () => {
               </Pressable>
             </View>
           </View>
-        ) : (
-          /* Normal Scanner View */
+        )}
+
+        {/* NOT FOUND STATE */}
+        {scanState === 'NOT_FOUND' && (
+          <View style={[styles.scannedCard, styles.errorCard]}>
+            <View style={styles.scannedHeader}>
+              <Ionicons name="close-circle" size={24} color={COLORS.RED} />
+              <Text style={[styles.scannedHeaderTitle, { color: COLORS.RED }]}>Không tìm thấy sản phẩm!</Text>
+            </View>
+
+            <View style={styles.errorBody}>
+              <Ionicons name="barcode-outline" size={64} color="#FFA8A8" style={{ alignSelf: 'center', marginVertical: 14 }} />
+              <Text style={styles.errorDescription}>
+                Mã vạch <Text style={{ fontWeight: '800' }}>"{failedBarcode}"</Text> không tồn tại trong hệ thống danh mục của siêu thị.
+              </Text>
+            </View>
+
+            <View style={styles.scannedButtons}>
+              <Pressable
+                style={styles.scannedCancelBtn}
+                onPress={() => {
+                  setScanState('IDLE');
+                  setManualCode('');
+                }}
+              >
+                <Text style={styles.scannedCancelText}>Thử quét lại</Text>
+              </Pressable>
+              <Pressable
+                style={[styles.scannedAddBtn, { backgroundColor: COLORS.MUTED }]}
+                onPress={() => {
+                  setScanState('IDLE');
+                  setManualCode('');
+                  navigate('search');
+                }}
+              >
+                <Text style={styles.scannedAddText}>Tìm thủ công</Text>
+              </Pressable>
+            </View>
+          </View>
+        )}
+
+        {/* ERROR STATE */}
+        {scanState === 'ERROR' && (
+          <View style={[styles.scannedCard, styles.warningCard]}>
+            <View style={styles.scannedHeader}>
+              <Ionicons name="warning" size={24} color="#E8590C" />
+              <Text style={[styles.scannedHeaderTitle, { color: '#E8590C' }]}>Lỗi kết nối máy quét!</Text>
+            </View>
+
+            <View style={styles.errorBody}>
+              <Ionicons name="wifi-outline" size={64} color="#FFE3E3" style={{ alignSelf: 'center', marginVertical: 14 }} />
+              <Text style={styles.errorDescription}>
+                Không thể kết nối tới hệ thống cân đo thông minh của xe đẩy. Vui lòng kiểm tra lại kết nối thiết bị.
+              </Text>
+            </View>
+
+            <View style={styles.scannedButtons}>
+              <Pressable
+                style={[styles.scannedAddBtn, { flex: 1, backgroundColor: '#E8590C' }]}
+                onPress={() => {
+                  setScanState('IDLE');
+                  setManualCode('');
+                }}
+              >
+                <Text style={styles.scannedAddText}>Thử lại kết nối</Text>
+              </Pressable>
+            </View>
+          </View>
+        )}
+
+        {/* IDLE/SCANNER VIEW */}
+        {scanState === 'IDLE' && (
           <View style={styles.scannerWrapper}>
             {/* Viewfinder area */}
             <View style={styles.viewfinder}>
@@ -181,9 +267,8 @@ export const ScanScreen: React.FC = () => {
               <View style={styles.inputWrapper}>
                 <TextInput
                   style={styles.input}
-                  placeholder="Nhập dãy số dưới barcode..."
+                  placeholder="Demo: MILK001 hoặc mã barcode..."
                   placeholderTextColor="#A1AEA5"
-                  keyboardType="number-pad"
                   value={manualCode}
                   onChangeText={setManualCode}
                 />
@@ -198,10 +283,19 @@ export const ScanScreen: React.FC = () => {
 
             {/* Quick simulation buttons */}
             <View style={styles.simulationCard}>
-              <Text style={styles.simTitle}>Mô phỏng quét mã (Tất cả {mockProducts.length} sản phẩm)</Text>
+              <Text style={styles.simTitle}>Mô phỏng quét mã (Demo nhanh)</Text>
               <ScrollView style={styles.simScroll} showsVerticalScrollIndicator={false}>
                 <View style={styles.simGrid}>
-                  {mockProducts.map((p) => (
+                  <Pressable
+                    style={[styles.simButton, { borderColor: COLORS.GREEN, backgroundColor: COLORS.LIGHT_GREEN }]}
+                    onPress={() => handleSimulateScan('MILK001')}
+                  >
+                    <Text style={[styles.simButtonText, { color: COLORS.DARK_GREEN }]} numberOfLines={1}>
+                      Quét mã MILK001
+                    </Text>
+                  </Pressable>
+                  
+                  {mockProducts.slice(0, 3).map((p) => (
                     <Pressable
                       key={p.id}
                       style={styles.simButton}
@@ -212,12 +306,22 @@ export const ScanScreen: React.FC = () => {
                       </Text>
                     </Pressable>
                   ))}
+                  
                   <Pressable
                     style={[styles.simButton, styles.simButtonError]}
-                    onPress={() => handleSimulateScan('9999999999999')} // Mã lỗi
+                    onPress={() => handleSimulateScan('9999999999999')} // Mã lỗi không tồn tại
                   >
                     <Text style={[styles.simButtonText, styles.simButtonTextError]} numberOfLines={1}>
-                      Mã lỗi (Không tồn tại)
+                      Mã không tồn tại (NOT_FOUND)
+                    </Text>
+                  </Pressable>
+
+                  <Pressable
+                    style={[styles.simButton, styles.simButtonError]}
+                    onPress={() => handleSimulateScan('ERROR_CONNECTION')} // Mã lỗi kết nối
+                  >
+                    <Text style={[styles.simButtonText, styles.simButtonTextError]} numberOfLines={1}>
+                      Lỗi kết nối máy quét (ERROR)
                     </Text>
                   </Pressable>
                 </View>
@@ -225,7 +329,7 @@ export const ScanScreen: React.FC = () => {
             </View>
           </View>
         )}
-      </View>
+      </ScrollView>
     </View>
   );
 };
@@ -259,10 +363,9 @@ const styles = StyleSheet.create({
     fontWeight: '900',
     color: COLORS.TEXT,
   },
-  content: {
-    flex: 1,
+  scrollContent: {
     padding: 16,
-    justifyContent: 'center',
+    paddingBottom: 120,
   },
   scannerWrapper: {
     flex: 1,
@@ -560,5 +663,26 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontWeight: '800',
     fontSize: 14,
+  },
+  errorCard: {
+    borderColor: COLORS.RED,
+    backgroundColor: '#FFF5F5',
+  },
+  warningCard: {
+    borderColor: '#FFE8CC',
+    backgroundColor: '#FFF9DB',
+  },
+  errorBody: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginVertical: 14,
+  },
+  errorDescription: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: COLORS.TEXT,
+    textAlign: 'center',
+    lineHeight: 20,
+    paddingHorizontal: 10,
   },
 });
