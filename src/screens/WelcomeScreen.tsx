@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, Pressable, StyleSheet, SafeAreaView } from 'react-native';
+import { View, Text, Pressable, StyleSheet, SafeAreaView, ImageBackground } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useApp } from '../context/AppContext';
 import { COLORS, SHADOW, TOP_INSET } from '../components/Theme';
@@ -38,79 +38,95 @@ export const WelcomeScreen: React.FC = () => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <View style={styles.logoCircle}>
-          <Ionicons name="cart" size={48} color={COLORS.GREEN} />
-        </View>
-        <Text style={styles.brandTitle}>SmartCart</Text>
-        <Text style={styles.brandTagline}>Trải nghiệm mua sắm thông minh thế hệ mới</Text>
-      </View>
-
-      <View style={styles.buttonContainer}>
-        <Pressable style={[styles.button, styles.primaryButton]} onPress={handleStartAsGuest}>
-          <Ionicons name="person-outline" size={20} color="#FFFFFF" />
-          <Text style={styles.primaryButtonText}>Tiếp tục với tư cách Khách</Text>
-        </Pressable>
-
-        <Pressable style={[styles.button, styles.vipButton]} onPress={handleStartAsVip}>
-          <Ionicons name="ribbon-outline" size={20} color="#7E22CE" />
-          <Text style={styles.vipButtonText}>Thành viên VIP (Hạng Tím)</Text>
-        </Pressable>
-
-        <Pressable style={[styles.button, styles.registerButton]} onPress={handleStartAsRegister}>
-          <Ionicons name="person-add-outline" size={20} color="#0D9488" />
-          <Text style={styles.registerButtonText}>Đăng ký hội viên mới</Text>
-        </Pressable>
-
-        <View style={styles.dividerRow}>
-          <View style={styles.dividerLine} />
-          <Text style={styles.dividerText}>HỆ THỐNG PHÍA SAU</Text>
-          <View style={styles.dividerLine} />
+    <ImageBackground
+      source={require('../../image/background-welcome.jpg')}
+      style={styles.backgroundImage}
+      resizeMode="cover"
+    >
+      <View style={styles.overlay} />
+      <SafeAreaView style={styles.container}>
+        <View style={styles.header}>
+          <View style={styles.logoCircle}>
+            <Ionicons name="cart" size={48} color={COLORS.GREEN} />
+          </View>
+          <Text style={styles.brandTitle}>SmartCart</Text>
+          <Text style={styles.brandTagline}>Trải nghiệm mua sắm thông minh thế hệ mới</Text>
         </View>
 
-        <View style={styles.systemRow}>
-          <Pressable style={[styles.button, styles.systemButton]} onPress={handleStartAsStaff}>
-            <Ionicons name="briefcase-outline" size={14} color="#FF922B" />
-            <Text style={[styles.systemButtonText, { color: '#FF922B' }]}>Nhân viên</Text>
+        <View style={styles.buttonContainer}>
+          <Pressable style={[styles.button, styles.primaryButton]} onPress={handleStartAsGuest}>
+            <Ionicons name="person-outline" size={20} color="#FFFFFF" />
+            <Text style={styles.primaryButtonText}>Tiếp tục với tư cách Khách</Text>
           </Pressable>
 
-          <Pressable style={[styles.button, styles.systemButton]} onPress={handleStartAsInspector}>
-            <Ionicons name="shield-checkmark-outline" size={14} color="#0066FF" />
-            <Text style={[styles.systemButtonText, { color: '#0066FF' }]}>Kiểm soát</Text>
+          <Pressable style={[styles.button, styles.vipButton]} onPress={handleStartAsVip}>
+            <Ionicons name="ribbon-outline" size={20} color="#7E22CE" />
+            <Text style={styles.vipButtonText}>Thành viên VIP (Hạng Tím)</Text>
           </Pressable>
 
-          <Pressable style={[styles.button, styles.systemButton]} onPress={handleStartAsManager}>
-            <Ionicons name="bar-chart-outline" size={14} color="#0D9488" />
-            <Text style={[styles.systemButtonText, { color: '#0D9488' }]}>Quản lý</Text>
+          <Pressable style={[styles.button, styles.registerButton]} onPress={handleStartAsRegister}>
+            <Ionicons name="person-add-outline" size={20} color="#0D9488" />
+            <Text style={styles.registerButtonText}>Đăng ký hội viên mới</Text>
           </Pressable>
+
+          <View style={styles.dividerRow}>
+            <View style={styles.dividerLine} />
+            <Text style={styles.dividerText}>HỆ THỐNG PHÍA SAU</Text>
+            <View style={styles.dividerLine} />
+          </View>
+
+          <View style={styles.systemRow}>
+            <Pressable style={[styles.button, styles.systemButton]} onPress={handleStartAsStaff}>
+              <Ionicons name="briefcase-outline" size={14} color="#FF922B" />
+              <Text style={[styles.systemButtonText, { color: '#FF922B' }]}>Nhân viên</Text>
+            </Pressable>
+
+            <Pressable style={[styles.button, styles.systemButton]} onPress={handleStartAsInspector}>
+              <Ionicons name="shield-checkmark-outline" size={14} color="#0066FF" />
+              <Text style={[styles.systemButtonText, { color: '#0066FF' }]}>Kiểm soát</Text>
+            </Pressable>
+
+            <Pressable style={[styles.button, styles.systemButton]} onPress={handleStartAsManager}>
+              <Ionicons name="bar-chart-outline" size={14} color="#0D9488" />
+              <Text style={[styles.systemButtonText, { color: '#0D9488' }]}>Quản lý</Text>
+            </Pressable>
+          </View>
         </View>
-      </View>
 
-      <View style={styles.footer}>
-        <Text style={styles.footerText}>SmartCart Demo • v1.0.0</Text>
-      </View>
+        <View style={styles.footer}>
+          <Text style={styles.footerText}>SmartCart Demo • v1.0.0</Text>
+        </View>
 
-      {/* Demo Launcher Quick Entrance */}
-      <Pressable style={styles.launcherBtn} onPress={() => {
-        setRole('manager'); // Cho phép truy cập màn hình launcher của quản lý
-        navigate('demo_launcher');
-      }}>
-        <Ionicons name="rocket" size={14} color="#E8590C" />
-        <Text style={styles.launcherBtnText}>Launcher</Text>
-      </Pressable>
-    </SafeAreaView>
+        {/* Demo Launcher Quick Entrance */}
+        <Pressable style={styles.launcherBtn} onPress={() => {
+          setRole('manager'); // Cho phép truy cập màn hình launcher của quản lý
+          navigate('demo_launcher');
+        }}>
+          <Ionicons name="rocket" size={14} color="#E8590C" />
+          <Text style={styles.launcherBtnText}>Launcher</Text>
+        </Pressable>
+      </SafeAreaView>
+    </ImageBackground>
   );
 };
 
 const styles = StyleSheet.create({
+  backgroundImage: {
+    flex: 1,
+    width: '100%',
+    height: '100%',
+  },
+  overlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(255, 255, 255, 0.72)', // Elegant light translucent overlay
+  },
   container: {
     flex: 1,
-    backgroundColor: COLORS.BACKGROUND,
     justifyContent: 'space-between',
     paddingHorizontal: 24,
     paddingVertical: 40,
     position: 'relative',
+    backgroundColor: 'transparent',
   },
   header: {
     alignItems: 'center',
