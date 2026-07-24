@@ -15,7 +15,6 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useApp } from '../context/AppContext';
-import { mockProducts } from '../data/mockProducts';
 import { Product } from '../types';
 import { COLORS, SHADOW, TOP_INSET, money } from '../components/Theme';
 
@@ -35,7 +34,7 @@ const QUICK_PROMPTS = [
 ];
 
 export const AISuggestionScreen: React.FC = () => {
-  const { addToCart, navigate, cart } = useApp();
+  const { addToCart, navigate, cart, products } = useApp();
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputText, setInputText] = useState('');
   const [isTyping, setIsTyping] = useState(false);
@@ -126,7 +125,7 @@ export const AISuggestionScreen: React.FC = () => {
           'Dưới đây là thực đơn bữa sáng đầy đủ dinh dưỡng, thơm ngon và tiện lợi dưới 100.000đ dành riêng cho bạn:\n\n1. **Sữa tươi TH True Milk** (28.000đ)\n2. **Bánh mì gối thơm bơ** (25.000đ)\n3. **Ngũ cốc ăn sáng dinh dưỡng** (42.000đ)\n\n**Tổng tiền combo chỉ: 95.000đ!**\nBạn có thể thêm nhanh cả combo này vào giỏ hàng ngay bên dưới nhé.';
         
         // Find TH Milk, Bread, Cereal
-        replyProducts = mockProducts.filter((p) =>
+        replyProducts = products.filter((p: Product) =>
           ['sua-tuoi-th', 'banh-mi-sandwich', 'ngu-coc-an-sang'].includes(p.id)
         );
         isCombo = true;
@@ -134,7 +133,7 @@ export const AISuggestionScreen: React.FC = () => {
         replyText =
           'Để chuẩn bị một món bò xào hoặc lẩu bò Úc thơm ngon đúng điệu, tôi gợi ý bạn mua kèm các sản phẩm rau củ tươi xanh hữu cơ và nước tương đậm đà sau đây:\n\n1. **Rau cải xanh organic** (18.000đ)\n2. **Nước tương Chinsu tỏi ớt** (16.000đ)\n\nCả hai đều có sẵn tại Khu thực phẩm tươi và Khu gia vị siêu thị!';
         
-        replyProducts = mockProducts.filter((p) =>
+        replyProducts = products.filter((p: Product) =>
           ['rau-cai-organic', 'nuoc-tuong-chinsu'].includes(p.id)
         );
       } else if (
@@ -146,7 +145,7 @@ export const AISuggestionScreen: React.FC = () => {
         replyText =
           'Đây là các mặt hàng đang áp dụng chương trình giảm giá sâu nhất hôm nay, giúp bạn tiết kiệm tối đa hóa đơn mua sắm:\n\n- **Cà chua bi đỏ** (Giảm 29% - Còn 25.000đ)\n- **Xà bông cục Lifebuoy** (Giảm 25% - Còn 15.000đ)\n- **Nước cam ép tươi** (Giảm 22% - Còn 35.000đ)\n- **Dầu gội dưỡng tóc Pantene** (Giảm 21% - Còn 75.000đ)';
         
-        replyProducts = mockProducts.filter((p) =>
+        replyProducts = products.filter((p: Product) =>
           ['ca-chua-bi', 'xa-phong-lifebuoy', 'nuoc-cam-ep', 'dau-goi-pantene'].includes(p.id)
         );
       } else {

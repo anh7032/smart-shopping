@@ -22,6 +22,12 @@ import { ManagerDashboardScreen } from './src/screens/ManagerDashboardScreen';
 import { ComingSoonScreen } from './src/screens/ComingSoonScreen';
 import { ExitVerificationScreen } from './src/screens/ExitVerificationScreen';
 import { VerificationResultScreen } from './src/screens/VerificationResultScreen';
+import { StaffDashboardScreen } from './src/screens/StaffDashboardScreen';
+import { ProductManagementScreen } from './src/screens/ProductManagementScreen';
+import { ProductEditScreen } from './src/screens/ProductEditScreen';
+import { ShelfManagementScreen } from './src/screens/ShelfManagementScreen';
+import { InventoryAlertScreen } from './src/screens/InventoryAlertScreen';
+import { ExitVerificationQueueScreen } from './src/screens/ExitVerificationQueueScreen';
 import { BottomNavigation } from './src/components/BottomNavigation';
 import { COLORS } from './src/components/Theme';
 
@@ -77,6 +83,18 @@ function MainContainer() {
         return <InspectorDiscrepancyScreen />;
       case 'manager_dashboard':
         return <ManagerDashboardScreen />;
+      case 'staff_dashboard':
+        return <StaffDashboardScreen />;
+      case 'product_management':
+        return <ProductManagementScreen />;
+      case 'product_edit':
+        return <ProductEditScreen />;
+      case 'shelf_management':
+        return <ShelfManagementScreen />;
+      case 'inventory_alerts':
+        return <InventoryAlertScreen />;
+      case 'exit_verification_queue':
+        return <ExitVerificationQueueScreen />;
       default:
         // Phục vụ làm màn hình chờ/Coming soon cho các màn hình Giai đoạn sau
         return <ComingSoonScreen />;

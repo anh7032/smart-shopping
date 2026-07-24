@@ -17,6 +17,11 @@ export const WelcomeScreen: React.FC = () => {
     navigate('inspector_lookup');
   };
 
+  const handleStartAsStaff = () => {
+    setRole('store_staff');
+    navigate('staff_dashboard');
+  };
+
   const handleStartAsVip = () => {
     setRole('vip');
     navigate('session_init');
@@ -65,14 +70,19 @@ export const WelcomeScreen: React.FC = () => {
         </View>
 
         <View style={styles.systemRow}>
-          <Pressable style={[styles.button, styles.inspectorHalfButton]} onPress={handleStartAsInspector}>
-            <Ionicons name="shield-checkmark-outline" size={16} color={COLORS.MUTED} />
-            <Text style={styles.inspectorHalfButtonText}>Kiểm soát viên</Text>
+          <Pressable style={[styles.button, styles.systemButton]} onPress={handleStartAsStaff}>
+            <Ionicons name="briefcase-outline" size={14} color="#FF922B" />
+            <Text style={[styles.systemButtonText, { color: '#FF922B' }]}>Nhân viên</Text>
           </Pressable>
 
-          <Pressable style={[styles.button, styles.managerHalfButton]} onPress={handleStartAsManager}>
-            <Ionicons name="bar-chart-outline" size={16} color="#0D9488" />
-            <Text style={styles.managerHalfButtonText}>Quản lý siêu thị</Text>
+          <Pressable style={[styles.button, styles.systemButton]} onPress={handleStartAsInspector}>
+            <Ionicons name="shield-checkmark-outline" size={14} color="#0066FF" />
+            <Text style={[styles.systemButtonText, { color: '#0066FF' }]}>Kiểm soát</Text>
+          </Pressable>
+
+          <Pressable style={[styles.button, styles.systemButton]} onPress={handleStartAsManager}>
+            <Ionicons name="bar-chart-outline" size={14} color="#0D9488" />
+            <Text style={[styles.systemButtonText, { color: '#0D9488' }]}>Quản lý</Text>
           </Pressable>
         </View>
       </View>
@@ -173,6 +183,17 @@ const styles = StyleSheet.create({
   systemRow: {
     flexDirection: 'row',
     gap: 10,
+  },
+  systemButton: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: COLORS.BORDER,
+    height: 48,
+  },
+  systemButtonText: {
+    fontWeight: '800',
+    fontSize: 11,
   },
   inspectorHalfButton: {
     flex: 1,

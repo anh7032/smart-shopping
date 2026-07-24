@@ -10,29 +10,29 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useApp } from '../context/AppContext';
-import { mockProducts } from '../data/mockProducts';
 import { ProductCard } from '../components/ProductCard';
 import { COLORS, SHADOW, TOP_INSET } from '../components/Theme';
 
 const CATEGORIES_LIST = ['Tất cả', 'Thực phẩm', 'Đồ uống', 'Chăm sóc', 'Gia dụng', 'Khuyến mãi'];
 
 export const CatalogScreen: React.FC = () => {
-  const { selectedCategory, navigate, cart, addToCart } = useApp();
+  const { selectedCategory, navigate, cart, addToCart, products } = useApp();
 
   const currentCategory = selectedCategory || 'Tất cả';
 
   const filteredProducts = useMemo(() => {
+    const activeProducts = products.filter((p) => p.isActive !== false);
     if (currentCategory === 'Tất cả') {
-      return mockProducts;
+      return activeProducts;
     }
     if (currentCategory === 'Khuyến mãi') {
-      return mockProducts.filter((p) => p.discount !== undefined);
+      return activeProducts.filter((p) => p.discount !== undefined);
     }
     // Handle "Chăm sóc" matching "Chăm sóc cá nhân"
-    return mockProducts.filter((p) => 
+    return activeProducts.filter((p) => 
       p.category.toLowerCase().includes(currentCategory.toLowerCase())
     );
-  }, [currentCategory]);
+  }, [currentCategory, products]);
 
   const handleCategorySelect = (category: string) => {
     navigate('catalog', { category });

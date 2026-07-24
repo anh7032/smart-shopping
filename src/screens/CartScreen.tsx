@@ -11,11 +11,10 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useApp } from '../context/AppContext';
 import { CartItem, Product } from '../types';
-import { mockProducts } from '../data/mockProducts';
 import { COLORS, SHADOW, TOP_INSET, money } from '../components/Theme';
 
 export const CartScreen: React.FC = () => {
-  const { cart, session, changeQuantity, removeFromCart, navigate, addToCart } = useApp();
+  const { cart, session, changeQuantity, removeFromCart, navigate, addToCart, products } = useApp();
 
   const totalPrice = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const totalQuantity = cart.reduce((sum, item) => sum + item.quantity, 0);
@@ -32,8 +31,8 @@ export const CartScreen: React.FC = () => {
     const recommendedList: { product: Product; reason: string; confidence: number }[] = [];
     const cartIds = cart.map((item) => item.id);
 
-    // Helper to find a product in mockProducts
-    const getProduct = (id: string) => mockProducts.find((p) => p.id === id);
+    // Helper to find an active product in products
+    const getProduct = (id: string) => products.find((p) => p.id === id && p.isActive !== false);
 
     // Rule 1: Sữa tươi TH True Milk (sua-tuoi-th) -> suggest Ngũ cốc (ngu-coc-an-sang)
     if (cartIds.includes('sua-tuoi-th') && !cartIds.includes('ngu-coc-an-sang')) {
@@ -100,11 +99,11 @@ export const CartScreen: React.FC = () => {
 
     // Rule 5: Fallback promotions (Nếu giỏ hàng có ít gợi ý, thêm các sản phẩm đang có discount cao)
     if (recommendedList.length < 3) {
-      const promos = mockProducts
-        .filter((p) => p.discount !== undefined && !cartIds.includes(p.id) && !recommendedList.some((r) => r.product.id === p.id))
+      const promos = products
+        .filter((p: Product) => p.isActive !== false && p.discount !== undefined && !cartIds.includes(p.id) && !recommendedList.some((r) => r.product.id === p.id))
         .slice(0, 3 - recommendedList.length);
       
-      promos.forEach((p) => {
+      promos.forEach((p: Product) => {
         recommendedList.push({
           product: p,
           reason: `Ưu đãi siêu sốc hôm nay giảm ${p.discount}%`,

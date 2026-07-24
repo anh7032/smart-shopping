@@ -12,12 +12,11 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useApp } from '../context/AppContext';
-import { mockProducts } from '../data/mockProducts';
 import { Product } from '../types';
 import { COLORS, SHADOW, TOP_INSET, money } from '../components/Theme';
 
 export const ScanScreen: React.FC = () => {
-  const { addToCart, navigate } = useApp();
+  const { addToCart, navigate, products } = useApp();
   const [manualCode, setManualCode] = useState('');
   const [scannedProduct, setScannedProduct] = useState<Product | null>(null);
   const [scanQty, setScanQty] = useState(1);
@@ -43,8 +42,16 @@ export const ScanScreen: React.FC = () => {
       return;
     }
 
-    const product = mockProducts.find((p) => p.barcode === trimmed);
+    const product = products.find((p) => p.barcode === trimmed);
     if (product) {
+      if (product.isActive === false) {
+        Alert.alert(
+          'Sản phẩm tạm khóa',
+          `Sản phẩm "${product.name}" hiện đang bị tạm khóa hoặc không khả dụng.`
+        );
+        setScanState('ERROR');
+        return;
+      }
       setScannedProduct(product);
       setScanQty(1);
       setScanState('SUCCESS');
@@ -295,7 +302,7 @@ export const ScanScreen: React.FC = () => {
                     </Text>
                   </Pressable>
                   
-                  {mockProducts.slice(0, 3).map((p) => (
+                  {products.slice(0, 3).map((p) => (
                     <Pressable
                       key={p.id}
                       style={styles.simButton}

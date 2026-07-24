@@ -10,12 +10,11 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useApp } from '../context/AppContext';
-import { mockProducts } from '../data/mockProducts';
 import { ProductCard } from '../components/ProductCard';
 import { COLORS, SHADOW, TOP_INSET } from '../components/Theme';
 
 export const SearchScreen: React.FC = () => {
-  const { navigate, cart, addToCart } = useApp();
+  const { navigate, cart, addToCart, products } = useApp();
   const [query, setQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
   const inputRef = useRef<TextInput>(null);
@@ -46,15 +45,16 @@ export const SearchScreen: React.FC = () => {
     const trimmed = query.trim().toLowerCase();
     if (trimmed === '') return [];
 
-    return mockProducts.filter((product) => {
-      return (
+    return products.filter((product) => {
+      const matchesSearch = (
         product.name.toLowerCase().includes(trimmed) ||
         product.description.toLowerCase().includes(trimmed) ||
         product.category.toLowerCase().includes(trimmed) ||
         product.barcode.includes(trimmed)
       );
+      return matchesSearch && product.isActive !== false;
     });
-  }, [query]);
+  }, [query, products]);
 
   const handleClearQuery = () => {
     setQuery('');

@@ -10,7 +10,6 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useApp } from '../context/AppContext';
-import { mockProducts } from '../data/mockProducts';
 import { Product, Receipt } from '../types';
 import { COLORS, SHADOW, TOP_INSET, money } from '../components/Theme';
 
@@ -22,7 +21,7 @@ interface DiscrepancyItem {
 }
 
 export const InspectorDiscrepancyScreen: React.FC = () => {
-  const { currentReceipt, updateReceipt, navigate } = useApp();
+  const { currentReceipt, updateReceipt, navigate, products } = useApp();
   const [discrepancyList, setDiscrepancyList] = useState<DiscrepancyItem[]>([]);
   const [isPaid, setIsPaid] = useState(false);
 
@@ -120,7 +119,7 @@ export const InspectorDiscrepancyScreen: React.FC = () => {
 
           {/* Quick product selector horizontal grid */}
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.productsSelectorScroll}>
-            {mockProducts.map((p) => (
+            {products.map((p) => (
               <Pressable
                 key={p.id}
                 style={styles.productChip}

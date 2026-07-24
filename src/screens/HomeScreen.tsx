@@ -11,7 +11,6 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useApp } from '../context/AppContext';
-import { mockProducts } from '../data/mockProducts';
 import { ProductCard } from '../components/ProductCard';
 import { Product } from '../types';
 import { COLORS, SHADOW, TOP_INSET, money } from '../components/Theme';
@@ -27,7 +26,7 @@ const categories: { label: string; icon: IconName; color: string }[] = [
 ];
 
 export const HomeScreen: React.FC = () => {
-  const { cart, session, navigate, addToCart, userRole } = useApp();
+  const { cart, session, navigate, addToCart, userRole, products, endSession } = useApp();
 
   const totalPrice = useMemo(
     () => cart.reduce((sum, item) => sum + item.price * item.quantity, 0),
@@ -45,14 +44,14 @@ export const HomeScreen: React.FC = () => {
 
   // Suggestions (non-discounted or high rating products)
   const suggestedProducts = useMemo(
-    () => mockProducts.filter((p) => !p.discount).slice(0, 4),
-    []
+    () => products.filter((p) => p.isActive !== false && !p.discount).slice(0, 4),
+    [products]
   );
 
   // Discounted products
   const discountedProducts = useMemo(
-    () => mockProducts.filter((p) => p.discount !== undefined).slice(0, 4),
-    []
+    () => products.filter((p) => p.isActive !== false && p.discount !== undefined).slice(0, 4),
+    [products]
   );
 
   const handleCategoryPress = (category: string) => {
@@ -84,9 +83,8 @@ export const HomeScreen: React.FC = () => {
               </View>
               <Text style={styles.welcomeName}>{session?.customerName || 'Khách hàng'}</Text>
             </View>
-            <Pressable style={styles.notificationButton}>
-              <Ionicons name="notifications-outline" size={20} color="#FFFFFF" />
-              <View style={styles.notificationDot} />
+            <Pressable style={styles.notificationButton} onPress={() => endSession()}>
+              <Ionicons name="log-out-outline" size={20} color="#FFFFFF" />
             </Pressable>
           </View>
 
