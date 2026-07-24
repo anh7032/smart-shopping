@@ -14,15 +14,10 @@ import { CartItem, Product } from '../types';
 import { COLORS, SHADOW, TOP_INSET, money } from '../components/Theme';
 
 export const CartScreen: React.FC = () => {
-  const { cart, session, changeQuantity, removeFromCart, navigate, addToCart, products } = useApp();
+  const { cart, session, changeQuantity, removeFromCart, navigate, addToCart, products, getCartTotals } = useApp();
 
-  const totalPrice = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const { totalPrice, savings } = getCartTotals(cart);
   const totalQuantity = cart.reduce((sum, item) => sum + item.quantity, 0);
-  const savings = cart.reduce(
-    (sum, item) =>
-      sum + (item.oldPrice ? (item.oldPrice - item.price) * item.quantity : 0),
-    0
-  );
 
   const budget = session?.budget || 500000;
   const remaining = budget - totalPrice;
@@ -288,6 +283,13 @@ const CartItemCard: React.FC<CartItemCardProps> = ({
   onIncrease,
   onRemove,
 }) => {
+  const { promotions } = useApp();
+  
+  const activeBogo = promotions.find(
+    (p) => p.status === 'active' && p.type === 'bogo' && p.applicableProductIds.includes(item.id)
+  );
+  const freeQty = activeBogo ? Math.floor(item.quantity / 2) : 0;
+
   return (
     <View style={styles.cartItemCard}>
       {item.image ? (
@@ -317,6 +319,13 @@ const CartItemCard: React.FC<CartItemCardProps> = ({
           </Text>
         </View>
 
+        {freeQty > 0 && (
+          <View style={styles.bogoBadge}>
+            <Ionicons name="gift-outline" size={11} color={COLORS.GREEN} />
+            <Text style={styles.bogoBadgeText}>Áp dụng Mua 1 Tặng 1 (Tặng {freeQty} cái miễn phí)</Text>
+          </View>
+        )}
+
         <View style={styles.cartPriceControlRow}>
           <Text style={styles.cartItemPrice}>{money(item.price)}</Text>
           <View style={styles.quantityControl}>
@@ -331,7 +340,7 @@ const CartItemCard: React.FC<CartItemCardProps> = ({
         </View>
 
         <Text style={styles.cartLineTotal}>
-          Thành tiền: {money(item.price * item.quantity)}
+          Thành tiền: {money(item.price * (item.quantity - freeQty))}
         </Text>
       </View>
     </View>
@@ -706,6 +715,22 @@ const styles = StyleSheet.create({
   aiNavBtnText: {
     color: '#FFFFFF',
     fontSize: 10,
+    fontWeight: '800',
+  },
+  bogoBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: COLORS.LIGHT_GREEN,
+    borderRadius: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    marginTop: 4,
+    alignSelf: 'flex-start',
+  },
+  bogoBadgeText: {
+    fontSize: 9,
+    color: COLORS.DARK_GREEN,
     fontWeight: '800',
   },
 });

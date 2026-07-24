@@ -88,7 +88,7 @@ export const ProductDetailScreen: React.FC = () => {
             </View>
           )}
 
-          {product.discount && (
+          {!!product.discount && (
             <View style={styles.discountBadge}>
               <Text style={styles.discountBadgeText}>GIẢM {product.discount}%</Text>
             </View>

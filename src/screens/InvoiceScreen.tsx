@@ -144,7 +144,7 @@ export const InvoiceScreen: React.FC = () => {
                 <Text style={styles.summaryLabel}>Tiết kiệm giảm giá:</Text>
                 <Text style={[styles.summaryValue, { color: COLORS.RED }]}>-{money(receipt.savings - (receipt.vipDiscount || 0))}</Text>
               </View>
-              {receipt.vipDiscount && (
+              {!!receipt.vipDiscount && (
                 <View style={styles.summaryRow}>
                   <Text style={[styles.summaryLabel, { color: '#7E22CE', fontWeight: '800' }]}>Chiết khấu VIP Hạng Tím:</Text>
                   <Text style={[styles.summaryValue, { color: '#7E22CE', fontWeight: '800' }]}>-{money(receipt.vipDiscount)}</Text>

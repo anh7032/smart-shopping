@@ -5,7 +5,7 @@ import { useApp } from '../context/AppContext';
 import { COLORS, SHADOW, TOP_INSET, money } from '../components/Theme';
 
 export const VerificationResultScreen: React.FC = () => {
-  const { currentReceipt, selectedCategory, endSession, navigate, updateReceipt } = useApp();
+  const { currentReceipt, selectedCategory, endSession, navigate, updateReceipt, addManagerAlert, setRole } = useApp();
   
   // States to handle interactive mock actions inside mismatch scenario
   const [simulationState, setSimulationState] = useState<'MATCH' | 'MISMATCH'>(
@@ -79,10 +79,33 @@ export const VerificationResultScreen: React.FC = () => {
     }, 1000);
   };
 
-  const handleCallStaff = () => {
+  const handleCallStaff = async () => {
+    const receiptId = receipt?.id || 'HD-UNKNOWN';
+    const customer = receipt?.customerName || 'Khách hàng';
+    
+    // 1. Tạo cảnh báo khẩn cấp cho Quản lý siêu thị
+    if (addManagerAlert) {
+      await addManagerAlert(
+        'exit_mismatch',
+        'critical',
+        `Lệch giỏ hàng soát vé tại lối ra cho Hóa đơn ${receiptId} (Khách hàng: ${customer}). Cần nhân viên hỗ trợ!`
+      );
+    }
+
     Alert.alert(
       'Đang gọi nhân viên hỗ trợ 📣',
-      'Đã gửi yêu cầu hỗ trợ tới trạm kiểm soát lối ra. Nhân viên Exit Control sẽ có mặt tại xe đẩy của bạn ngay lập tức.'
+      'Yêu cầu hỗ trợ đã được gửi! Hệ thống sẽ tự động chuyển sang vai trò Nhân viên lối ra để kiểm tra và xử lý lệch giỏ hàng này.',
+      [
+        {
+          text: 'Đi xử lý lệch giỏ',
+          onPress: () => {
+            // 2. Chuyển role sang store_staff
+            setRole('store_staff');
+            // 3. Điều hướng tới hàng đợi soát vé
+            navigate('exit_verification_queue');
+          }
+        }
+      ]
     );
   };
 
