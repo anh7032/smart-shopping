@@ -28,6 +28,8 @@ import { ProductEditScreen } from './src/screens/ProductEditScreen';
 import { ShelfManagementScreen } from './src/screens/ShelfManagementScreen';
 import { InventoryAlertScreen } from './src/screens/InventoryAlertScreen';
 import { ExitVerificationQueueScreen } from './src/screens/ExitVerificationQueueScreen';
+import { PromotionManagementScreen } from './src/screens/PromotionManagementScreen';
+import { ManagerAlertCenterScreen } from './src/screens/ManagerAlertCenterScreen';
 import { BottomNavigation } from './src/components/BottomNavigation';
 import { COLORS } from './src/components/Theme';
 
@@ -95,6 +97,10 @@ function MainContainer() {
         return <InventoryAlertScreen />;
       case 'exit_verification_queue':
         return <ExitVerificationQueueScreen />;
+      case 'promotion_management':
+        return <PromotionManagementScreen />;
+      case 'manager_alert_center':
+        return <ManagerAlertCenterScreen />;
       default:
         // Phục vụ làm màn hình chờ/Coming soon cho các màn hình Giai đoạn sau
         return <ComingSoonScreen />;
