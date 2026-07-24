@@ -131,3 +131,15 @@ export type ManagerAlert = {
   createdAt: string;
   status: AlertStatus;
 };
+
+export type IntegrationStatus = 'Connected' | 'Disconnected' | 'Syncing' | 'Error';
+
+export type SyncHistoryEntry = {
+  id: string;
+  system: 'ERP' | 'POS';
+  startTime: string;
+  endTime: string;
+  recordsProcessed: number;
+  status: 'success' | 'error';
+  errorMessage?: string;
+};

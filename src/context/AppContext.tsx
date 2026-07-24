@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Product, CartItem, SessionState, Receipt, ScreenName, UserRole, AuditLog, Promotion, ManagerAlert, AlertSeverity, AlertStatus } from '../types';
+import { Product, CartItem, SessionState, Receipt, ScreenName, UserRole, AuditLog, Promotion, ManagerAlert, AlertSeverity, AlertStatus, IntegrationStatus, SyncHistoryEntry } from '../types';
 import { mockProducts } from '../data/mockProducts';
 
 interface AppContextProps {
@@ -19,6 +19,10 @@ interface AppContextProps {
   auditLogs: AuditLog[];
   promotions: Promotion[];
   managerAlerts: ManagerAlert[];
+  erpStatus: IntegrationStatus;
+  posStatus: IntegrationStatus;
+  lastSync: string;
+  syncHistory: SyncHistoryEntry[];
 
   // Actions
   setRole: (role: UserRole) => void;
@@ -48,6 +52,8 @@ interface AppContextProps {
   resolveManagerAlert: (alertId: string) => Promise<void>;
   resetPromotionsAndAlerts: () => Promise<void>;
   getCartTotals: (items: CartItem[]) => { totalPrice: number; savings: number };
+  triggerSync: (scenario: 'success' | 'erp_error' | 'pos_error') => Promise<void>;
+  resetSyncState: () => Promise<void>;
 }
 
 const AppContext = createContext<AppContextProps | undefined>(undefined);
@@ -63,6 +69,10 @@ const STORAGE_KEYS = {
   AUDIT_LOGS: '@smart_shopping_audit_logs',
   PROMOTIONS: '@smart_shopping_promotions_state',
   MANAGER_ALERTS: '@smart_shopping_manager_alerts_state',
+  ERP_STATUS: '@smart_shopping_erp_status',
+  POS_STATUS: '@smart_shopping_pos_status',
+  LAST_SYNC: '@smart_shopping_last_sync',
+  SYNC_HISTORY: '@smart_shopping_sync_history',
 };
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -79,6 +89,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
   const [promotions, setPromotions] = useState<Promotion[]>([]);
   const [managerAlerts, setManagerAlerts] = useState<ManagerAlert[]>([]);
+  const [erpStatus, setErpStatus] = useState<IntegrationStatus>('Connected');
+  const [posStatus, setPosStatus] = useState<IntegrationStatus>('Connected');
+  const [lastSync, setLastSync] = useState<string>('Chưa đồng bộ');
+  const [syncHistory, setSyncHistory] = useState<SyncHistoryEntry[]>([]);
 
   // Load state from AsyncStorage on startup
   useEffect(() => {
@@ -94,6 +108,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         const storedAuditLogs = await AsyncStorage.getItem(STORAGE_KEYS.AUDIT_LOGS);
         const storedPromotions = await AsyncStorage.getItem(STORAGE_KEYS.PROMOTIONS);
         const storedAlerts = await AsyncStorage.getItem(STORAGE_KEYS.MANAGER_ALERTS);
+        const storedErpStatus = await AsyncStorage.getItem(STORAGE_KEYS.ERP_STATUS);
+        const storedPosStatus = await AsyncStorage.getItem(STORAGE_KEYS.POS_STATUS);
+        const storedLastSync = await AsyncStorage.getItem(STORAGE_KEYS.LAST_SYNC);
+        const storedSyncHistory = await AsyncStorage.getItem(STORAGE_KEYS.SYNC_HISTORY);
 
         if (storedCart) setCart(JSON.parse(storedCart));
         if (storedSession) setSession(JSON.parse(storedSession));
@@ -180,6 +198,35 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           ];
           setManagerAlerts(defaultAlerts);
           await AsyncStorage.setItem(STORAGE_KEYS.MANAGER_ALERTS, JSON.stringify(defaultAlerts));
+        }
+
+        if (storedErpStatus) setErpStatus(JSON.parse(storedErpStatus) as IntegrationStatus);
+        if (storedPosStatus) setPosStatus(JSON.parse(storedPosStatus) as IntegrationStatus);
+        if (storedLastSync) setLastSync(JSON.parse(storedLastSync));
+        
+        if (storedSyncHistory) {
+          setSyncHistory(JSON.parse(storedSyncHistory));
+        } else {
+          const defaultHistory: SyncHistoryEntry[] = [
+            {
+              id: 'SYNC-101',
+              system: 'ERP',
+              startTime: '24/07/2026, 08:00:15',
+              endTime: '24/07/2026, 08:00:16',
+              recordsProcessed: 15,
+              status: 'success',
+            },
+            {
+              id: 'SYNC-102',
+              system: 'POS',
+              startTime: '24/07/2026, 08:15:30',
+              endTime: '24/07/2026, 08:15:32',
+              recordsProcessed: 8,
+              status: 'success',
+            },
+          ];
+          setSyncHistory(defaultHistory);
+          await AsyncStorage.setItem(STORAGE_KEYS.SYNC_HISTORY, JSON.stringify(defaultHistory));
         }
 
         // Khởi tạo database hội viên ảo trong AsyncStorage nếu chưa có
@@ -610,6 +657,126 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     await AsyncStorage.removeItem(STORAGE_KEYS.MANAGER_ALERTS);
   };
 
+  const triggerSync = async (scenario: 'success' | 'erp_error' | 'pos_error') => {
+    // 1. Chuyển trạng thái sang Syncing
+    setErpStatus('Syncing');
+    setPosStatus('Syncing');
+    
+    // Ghi audit log vận hành
+    await logAuditAction('SYNC_TRIGGERED', 'ERP/POS', 'Yêu cầu đồng bộ dữ liệu POS/ERP hệ thống trung tâm đã được kích hoạt.');
+
+    // 2. Chờ 1.5 giây mô phỏng
+    await new Promise((resolve) => setTimeout(resolve, 1500));
+
+    const nowStr = new Date().toLocaleString('vi-VN');
+    const syncId = `SYNC-${Math.floor(100 + Math.random() * 900)}`;
+
+    if (scenario === 'success') {
+      setErpStatus('Connected');
+      setPosStatus('Connected');
+      setLastSync(nowStr);
+
+      const newHistory: SyncHistoryEntry[] = [
+        {
+          id: `${syncId}-A`,
+          system: 'ERP',
+          startTime: nowStr,
+          endTime: nowStr,
+          recordsProcessed: products.length,
+          status: 'success',
+        },
+        {
+          id: `${syncId}-B`,
+          system: 'POS',
+          startTime: nowStr,
+          endTime: nowStr,
+          recordsProcessed: receipts.length,
+          status: 'success',
+        },
+        ...syncHistory,
+      ];
+      setSyncHistory(newHistory);
+
+      await saveState(STORAGE_KEYS.ERP_STATUS, 'Connected');
+      await saveState(STORAGE_KEYS.POS_STATUS, 'Connected');
+      await saveState(STORAGE_KEYS.LAST_SYNC, nowStr);
+      await saveState(STORAGE_KEYS.SYNC_HISTORY, newHistory);
+
+      await logAuditAction('SYNC_SUCCESS', 'ERP/POS', `Đồng bộ POS/ERP thành công. Đã cập nhật ${products.length} sản phẩm, ${receipts.length} hóa đơn.`);
+    } else if (scenario === 'erp_error') {
+      setErpStatus('Error');
+      setPosStatus('Connected'); // POS vẫn ok
+
+      const newHistory: SyncHistoryEntry[] = [
+        {
+          id: syncId,
+          system: 'ERP',
+          startTime: nowStr,
+          endTime: nowStr,
+          recordsProcessed: 0,
+          status: 'error',
+          errorMessage: 'ERP Connection Timeout (Error 504)',
+        },
+        ...syncHistory,
+      ];
+      setSyncHistory(newHistory);
+
+      await saveState(STORAGE_KEYS.ERP_STATUS, 'Error');
+      await saveState(STORAGE_KEYS.POS_STATUS, 'Connected');
+      await saveState(STORAGE_KEYS.SYNC_HISTORY, newHistory);
+
+      // Tự động đẩy Cảnh báo khẩn cấp sang Quản lý siêu thị
+      await addManagerAlert(
+        'sync_error',
+        'critical',
+        `LỖI KẾT NỐI ERP: Hệ thống xe đẩy mất kết nối đồng bộ danh mục kho ERP trung tâm (Mã: ${syncId}).`
+      );
+
+      await logAuditAction('SYNC_FAILED', 'ERP', `Đồng bộ ERP thất bại (Mã: ${syncId}). Đã tạo cảnh báo khẩn cấp cho Quản lý.`);
+    } else if (scenario === 'pos_error') {
+      setErpStatus('Connected');
+      setPosStatus('Error');
+
+      const newHistory: SyncHistoryEntry[] = [
+        {
+          id: syncId,
+          system: 'POS',
+          startTime: nowStr,
+          endTime: nowStr,
+          recordsProcessed: 0,
+          status: 'error',
+          errorMessage: 'POS Database Locked (Error 409)',
+        },
+        ...syncHistory,
+      ];
+      setSyncHistory(newHistory);
+
+      await saveState(STORAGE_KEYS.ERP_STATUS, 'Connected');
+      await saveState(STORAGE_KEYS.POS_STATUS, 'Error');
+      await saveState(STORAGE_KEYS.SYNC_HISTORY, newHistory);
+
+      // Tự động đẩy Cảnh báo sang Quản lý
+      await addManagerAlert(
+        'sync_error',
+        'critical',
+        `LỖI KẾT NỐI POS: Mất đồng bộ lịch sử giao dịch hóa đơn Smart Cart sang hệ thống POS quầy thu ngân (Mã: ${syncId}).`
+      );
+
+      await logAuditAction('SYNC_FAILED', 'POS', `Đồng bộ POS thất bại (Mã: ${syncId}). Đã tạo cảnh báo khẩn cấp cho Quản lý.`);
+    }
+  };
+
+  const resetSyncState = async () => {
+    setErpStatus('Connected');
+    setPosStatus('Connected');
+    setLastSync('Chưa đồng bộ');
+    setSyncHistory([]);
+    await AsyncStorage.removeItem(STORAGE_KEYS.ERP_STATUS);
+    await AsyncStorage.removeItem(STORAGE_KEYS.POS_STATUS);
+    await AsyncStorage.removeItem(STORAGE_KEYS.LAST_SYNC);
+    await AsyncStorage.removeItem(STORAGE_KEYS.SYNC_HISTORY);
+  };
+
   return (
     <AppContext.Provider
       value={{
@@ -626,6 +793,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         auditLogs,
         promotions,
         managerAlerts,
+        erpStatus,
+        posStatus,
+        lastSync,
+        syncHistory,
         setRole,
         navigate,
         startSession,
@@ -645,6 +816,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         resolveManagerAlert,
         resetPromotionsAndAlerts,
         getCartTotals,
+        triggerSync,
+        resetSyncState,
       }}
     >
       {children}
