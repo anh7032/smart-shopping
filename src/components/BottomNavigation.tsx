@@ -9,7 +9,7 @@ type TabKey = 'home' | 'search' | 'scan' | 'ai' | 'cart';
 type IconName = React.ComponentProps<typeof Ionicons>['name'];
 
 export const BottomNavigation: React.FC = () => {
-  const { currentScreen, cart, navigate, session } = useApp();
+  const { currentScreen, cart, navigate, session, userRole } = useApp();
 
   // Hide BottomNavigation on checkout, payment, invoice, and inspector screens to prevent overlap
   const hiddenScreens: ScreenName[] = [
@@ -23,9 +23,20 @@ export const BottomNavigation: React.FC = () => {
     'inspector_discrepancy',
     'manager_dashboard',
     'session_complete',
+    'staff_dashboard',
+    'product_management',
+    'product_edit',
+    'shelf_management',
+    'inventory_alerts',
+    'exit_verification_queue',
+    'promotion_management',
+    'promotion_analytics',
+    'manager_alert_center',
   ];
 
-  if (!session || hiddenScreens.includes(currentScreen)) return null;
+  const isCustomer = userRole === 'customer' || userRole === 'vip';
+
+  if (!session || !isCustomer || hiddenScreens.includes(currentScreen)) return null;
 
   const tabs: { key: TabKey; screen: ScreenName; label: string; icon: IconName }[] = [
     { key: 'home', screen: 'home', label: 'Trang chủ', icon: 'home-outline' },

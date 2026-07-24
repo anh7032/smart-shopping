@@ -102,3 +102,32 @@ export type AuditLog = {
   timestamp: string;
   description: string;
 };
+
+export type PromotionType = 'percentage' | 'fixed_amount' | 'bogo' | 'member_only';
+export type PromotionStatus = 'draft' | 'active' | 'scheduled' | 'expired' | 'disabled';
+
+export type Promotion = {
+  id: string;
+  name: string;
+  type: PromotionType;
+  applicableProductIds: string[]; // Danh sách ID sản phẩm áp dụng
+  discountValue: number; // Tỷ lệ phần trăm hoặc số tiền giảm cố định
+  startDate: string; // Ngày bắt đầu (định dạng YYYY-MM-DD hoặc DD/MM/YYYY)
+  endDate: string; // Ngày kết thúc
+  usageCount: number; // Số lượt đã áp dụng
+  status: PromotionStatus;
+  revenueGenerated: number; // Tổng doanh thu tạo ra từ các đơn dùng promotion
+  totalDiscountAmount: number; // Tổng số tiền đã chiết khấu cho khách
+};
+
+export type AlertSeverity = 'info' | 'warning' | 'critical';
+export type AlertStatus = 'new' | 'read' | 'resolved';
+
+export type ManagerAlert = {
+  id: string;
+  type: 'low_stock' | 'out_of_stock' | 'failed_payment' | 'exit_mismatch' | 'sync_error' | 'promo_expired';
+  severity: AlertSeverity;
+  message: string;
+  createdAt: string;
+  status: AlertStatus;
+};

@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Product, CartItem, SessionState, Receipt, ScreenName, UserRole, AuditLog } from '../types';
+import { Product, CartItem, SessionState, Receipt, ScreenName, UserRole, AuditLog, Promotion, ManagerAlert, AlertSeverity, AlertStatus } from '../types';
 import { mockProducts } from '../data/mockProducts';
 
 interface AppContextProps {
@@ -17,6 +17,8 @@ interface AppContextProps {
   selectedCategory: string | null;
   isLoading: boolean;
   auditLogs: AuditLog[];
+  promotions: Promotion[];
+  managerAlerts: ManagerAlert[];
 
   // Actions
   setRole: (role: UserRole) => void;
@@ -40,6 +42,12 @@ interface AppContextProps {
   updateProduct: (updatedProduct: Product) => Promise<void>;
   resetProducts: () => Promise<void>;
   logAuditAction: (action: string, target: string, description: string) => Promise<void>;
+  addPromotion: (promo: Omit<Promotion, 'id' | 'usageCount' | 'revenueGenerated' | 'totalDiscountAmount'>) => Promise<void>;
+  updatePromotion: (promo: Promotion) => Promise<void>;
+  addManagerAlert: (type: ManagerAlert['type'], severity: AlertSeverity, message: string) => Promise<void>;
+  resolveManagerAlert: (alertId: string) => Promise<void>;
+  resetPromotionsAndAlerts: () => Promise<void>;
+  getCartTotals: (items: CartItem[]) => { totalPrice: number; savings: number };
 }
 
 const AppContext = createContext<AppContextProps | undefined>(undefined);
@@ -53,6 +61,8 @@ const STORAGE_KEYS = {
   CURRENT_RECEIPT: '@smart_shopping_current_receipt',
   PRODUCTS: '@smart_shopping_products_state',
   AUDIT_LOGS: '@smart_shopping_audit_logs',
+  PROMOTIONS: '@smart_shopping_promotions_state',
+  MANAGER_ALERTS: '@smart_shopping_manager_alerts_state',
 };
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -67,6 +77,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
+  const [promotions, setPromotions] = useState<Promotion[]>([]);
+  const [managerAlerts, setManagerAlerts] = useState<ManagerAlert[]>([]);
 
   // Load state from AsyncStorage on startup
   useEffect(() => {
@@ -80,6 +92,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         const storedCurrentReceipt = await AsyncStorage.getItem(STORAGE_KEYS.CURRENT_RECEIPT);
         const storedProducts = await AsyncStorage.getItem(STORAGE_KEYS.PRODUCTS);
         const storedAuditLogs = await AsyncStorage.getItem(STORAGE_KEYS.AUDIT_LOGS);
+        const storedPromotions = await AsyncStorage.getItem(STORAGE_KEYS.PROMOTIONS);
+        const storedAlerts = await AsyncStorage.getItem(STORAGE_KEYS.MANAGER_ALERTS);
 
         if (storedCart) setCart(JSON.parse(storedCart));
         if (storedSession) setSession(JSON.parse(storedSession));
@@ -94,6 +108,79 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           await AsyncStorage.setItem(STORAGE_KEYS.PRODUCTS, JSON.stringify(mockProducts));
         }
         if (storedAuditLogs) setAuditLogs(JSON.parse(storedAuditLogs));
+
+        if (storedPromotions) {
+          setPromotions(JSON.parse(storedPromotions));
+        } else {
+          const defaultPromotions: Promotion[] = [
+            {
+              id: 'PROMO-001',
+              name: 'Siêu Sale Cà Chua Bi',
+              type: 'percentage',
+              applicableProductIds: ['ca-chua-bi'],
+              discountValue: 29,
+              startDate: '2026-07-01',
+              endDate: '2026-08-31',
+              usageCount: 4,
+              status: 'active',
+              revenueGenerated: 100000,
+              totalDiscountAmount: 40000,
+            },
+            {
+              id: 'PROMO-002',
+              name: 'Đặc Quyền Thành Viên Sữa TH',
+              type: 'member_only',
+              applicableProductIds: ['sua-tuoi-th'],
+              discountValue: 15,
+              startDate: '2026-07-15',
+              endDate: '2026-08-15',
+              usageCount: 8,
+              status: 'active',
+              revenueGenerated: 224000,
+              totalDiscountAmount: 33600,
+            },
+            {
+              id: 'PROMO-003',
+              name: 'BOGO Trà Xanh C2',
+              type: 'bogo',
+              applicableProductIds: ['tra-xanh-c2'],
+              discountValue: 100, // Buy 1 Get 1
+              startDate: '2026-08-01',
+              endDate: '2026-08-07',
+              usageCount: 0,
+              status: 'scheduled',
+              revenueGenerated: 0,
+              totalDiscountAmount: 0,
+            },
+          ];
+          setPromotions(defaultPromotions);
+          await AsyncStorage.setItem(STORAGE_KEYS.PROMOTIONS, JSON.stringify(defaultPromotions));
+        }
+
+        if (storedAlerts) {
+          setManagerAlerts(JSON.parse(storedAlerts));
+        } else {
+          const defaultAlerts: ManagerAlert[] = [
+            {
+              id: 'ALT-101',
+              type: 'low_stock',
+              severity: 'warning',
+              message: 'Sản phẩm "Thịt bò Úc nhập khẩu" sắp hết hàng trong kho (chỉ còn 8 sản phẩm).',
+              createdAt: new Date().toLocaleString('vi-VN'),
+              status: 'new',
+            },
+            {
+              id: 'ALT-102',
+              type: 'exit_mismatch',
+              severity: 'critical',
+              message: 'Lệch giỏ hàng soát vé tại lối ra cho Hóa đơn HD-481902 (Khách hàng Nguyễn Văn A).',
+              createdAt: new Date().toLocaleString('vi-VN'),
+              status: 'new',
+            },
+          ];
+          setManagerAlerts(defaultAlerts);
+          await AsyncStorage.setItem(STORAGE_KEYS.MANAGER_ALERTS, JSON.stringify(defaultAlerts));
+        }
 
         // Khởi tạo database hội viên ảo trong AsyncStorage nếu chưa có
         const storedMembers = await AsyncStorage.getItem('@smart_shopping_members');
@@ -135,6 +222,33 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     } catch (error) {
       console.error(`Lỗi lưu dữ liệu [${key}]:`, error);
     }
+  };
+
+  const getCartTotals = (items: CartItem[]) => {
+    let totalPrice = 0;
+    let savings = 0;
+
+    items.forEach((item) => {
+      // Tìm chương trình khuyến mại BOGO hoạt động cho sản phẩm này
+      const activeBogo = promotions.find(
+        (p) => p.status === 'active' && p.type === 'bogo' && p.applicableProductIds.includes(item.id)
+      );
+
+      if (activeBogo) {
+        const freeQty = Math.floor(item.quantity / 2);
+        const payableQty = item.quantity - freeQty;
+        totalPrice += payableQty * item.price;
+        savings += freeQty * item.price;
+      } else {
+        totalPrice += item.price * item.quantity;
+      }
+
+      if (item.oldPrice) {
+        savings += (item.oldPrice - item.price) * item.quantity;
+      }
+    });
+
+    return { totalPrice, savings };
   };
 
   const setRole = (role: UserRole) => {
@@ -452,6 +566,50 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     await saveState(STORAGE_KEYS.AUDIT_LOGS, updatedLogs);
   };
 
+  const addPromotion = async (promo: Omit<Promotion, 'id' | 'usageCount' | 'revenueGenerated' | 'totalDiscountAmount'>) => {
+    const newPromo: Promotion = {
+      ...promo,
+      id: `PROMO-${Math.floor(100 + Math.random() * 900)}`,
+      usageCount: 0,
+      revenueGenerated: 0,
+      totalDiscountAmount: 0,
+    };
+    const updatedList = [newPromo, ...promotions];
+    setPromotions(updatedList);
+    await saveState(STORAGE_KEYS.PROMOTIONS, updatedList);
+  };
+
+  const updatePromotion = async (updatedPromo: Promotion) => {
+    const updatedList = promotions.map((p) => (p.id === updatedPromo.id ? updatedPromo : p));
+    setPromotions(updatedList);
+    await saveState(STORAGE_KEYS.PROMOTIONS, updatedList);
+  };
+
+  const addManagerAlert = async (type: ManagerAlert['type'], severity: AlertSeverity, message: string) => {
+    const newAlert: ManagerAlert = {
+      id: `ALT-${Math.floor(100 + Math.random() * 900)}`,
+      type,
+      severity,
+      message,
+      createdAt: new Date().toLocaleString('vi-VN'),
+      status: 'new',
+    };
+    const updatedList = [newAlert, ...managerAlerts];
+    setManagerAlerts(updatedList);
+    await saveState(STORAGE_KEYS.MANAGER_ALERTS, updatedList);
+  };
+
+  const resolveManagerAlert = async (alertId: string) => {
+    const updatedList = managerAlerts.map((a) => (a.id === alertId ? { ...a, status: 'resolved' as AlertStatus } : a));
+    setManagerAlerts(updatedList);
+    await saveState(STORAGE_KEYS.MANAGER_ALERTS, updatedList);
+  };
+
+  const resetPromotionsAndAlerts = async () => {
+    await AsyncStorage.removeItem(STORAGE_KEYS.PROMOTIONS);
+    await AsyncStorage.removeItem(STORAGE_KEYS.MANAGER_ALERTS);
+  };
+
   return (
     <AppContext.Provider
       value={{
@@ -466,6 +624,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         selectedCategory,
         isLoading,
         auditLogs,
+        promotions,
+        managerAlerts,
         setRole,
         navigate,
         startSession,
@@ -479,6 +639,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         updateProduct,
         resetProducts,
         logAuditAction,
+        addPromotion,
+        updatePromotion,
+        addManagerAlert,
+        resolveManagerAlert,
+        resetPromotionsAndAlerts,
+        getCartTotals,
       }}
     >
       {children}
