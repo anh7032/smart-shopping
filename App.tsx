@@ -33,6 +33,8 @@ import { PromotionManagementScreen } from './src/screens/PromotionManagementScre
 import { ManagerAlertCenterScreen } from './src/screens/ManagerAlertCenterScreen';
 import { IntegrationStatusScreen } from './src/screens/IntegrationStatusScreen';
 import { AuditLogScreen } from './src/screens/AuditLogScreen';
+import { RequirementCoverageScreen } from './src/screens/RequirementCoverageScreen';
+import { DemoLauncherScreen } from './src/screens/DemoLauncherScreen';
 import { BottomNavigation } from './src/components/BottomNavigation';
 import { COLORS, SHADOW } from './src/components/Theme';
 
@@ -171,6 +173,10 @@ function MainContainer() {
         return <IntegrationStatusScreen />;
       case 'audit_log':
         return <AuditLogScreen />;
+      case 'requirement_coverage':
+        return <RequirementCoverageScreen />;
+      case 'demo_launcher':
+        return <DemoLauncherScreen />;
       default:
         // Phục vụ làm màn hình chờ/Coming soon cho các màn hình Giai đoạn sau
         return <ComingSoonScreen />;

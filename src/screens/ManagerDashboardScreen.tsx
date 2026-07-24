@@ -604,6 +604,17 @@ export const ManagerDashboardScreen: React.FC = () => {
               </View>
               <Ionicons name="chevron-forward" size={16} color={COLORS.MUTED} />
             </Pressable>
+
+            <Pressable style={styles.menuRowBtn} onPress={() => navigate('requirement_coverage')}>
+              <View style={[styles.menuIconCircle, { backgroundColor: '#F3F6F3' }]}>
+                <Ionicons name="list-outline" size={20} color={COLORS.GREEN} />
+              </View>
+              <View style={styles.menuText}>
+                <Text style={styles.menuTitleText}>Traceability Matrix (SRS)</Text>
+                <Text style={styles.menuSubText}>Đối chiếu mã tính năng US01-US19 & F01-F19 hoàn thiện.</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={16} color={COLORS.MUTED} />
+            </Pressable>
           </View>
         )}
       </ScrollView>

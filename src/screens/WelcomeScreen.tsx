@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, Pressable, StyleSheet, SafeAreaView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useApp } from '../context/AppContext';
-import { COLORS, SHADOW } from '../components/Theme';
+import { COLORS, SHADOW, TOP_INSET } from '../components/Theme';
 
 export const WelcomeScreen: React.FC = () => {
   const { navigate, setRole } = useApp();
@@ -90,6 +90,15 @@ export const WelcomeScreen: React.FC = () => {
       <View style={styles.footer}>
         <Text style={styles.footerText}>SmartCart Demo • v1.0.0</Text>
       </View>
+
+      {/* Demo Launcher Quick Entrance */}
+      <Pressable style={styles.launcherBtn} onPress={() => {
+        setRole('manager'); // Cho phép truy cập màn hình launcher của quản lý
+        navigate('demo_launcher');
+      }}>
+        <Ionicons name="rocket" size={14} color="#E8590C" />
+        <Text style={styles.launcherBtnText}>Launcher</Text>
+      </Pressable>
     </SafeAreaView>
   );
 };
@@ -101,6 +110,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 24,
     paddingVertical: 40,
+    position: 'relative',
   },
   header: {
     alignItems: 'center',
@@ -235,5 +245,26 @@ const styles = StyleSheet.create({
   footerText: {
     fontSize: 11,
     color: COLORS.MUTED,
+  },
+  launcherBtn: {
+    position: 'absolute',
+    top: TOP_INSET + 10,
+    right: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#FFF4E6',
+    borderWidth: 1,
+    borderColor: '#FFE8CC',
+    borderRadius: 14,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    ...SHADOW,
+    zIndex: 100,
+  },
+  launcherBtnText: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: '#E8590C',
   },
 });
