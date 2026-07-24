@@ -214,27 +214,38 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const addToCart = async (product: Product, quantity = 1) => {
+    // Lấy thông tin tồn kho thực tế mới nhất từ danh sách products
+    const freshProduct = products.find((p) => p.id === product.id) || product;
+
     // 1. Kiểm tra tồn kho
-    const existingItem = cart.find((item) => item.id === product.id);
+    const existingItem = cart.find((item) => item.id === freshProduct.id);
     const currentQty = existingItem ? existingItem.quantity : 0;
     const requestedQty = currentQty + quantity;
 
-    if (requestedQty > product.stock) {
+    if (requestedQty > freshProduct.stock) {
       Alert.alert(
         'Hết hàng hoặc vượt giới hạn',
-        `Sản phẩm này chỉ còn ${product.stock} sản phẩm trong kho. Bạn đã có ${currentQty} sản phẩm trong giỏ.`
+        `Sản phẩm này chỉ còn ${freshProduct.stock} sản phẩm trong kho. Bạn đã có ${currentQty} sản phẩm trong giỏ.`
       );
       return;
+    }
+
+    // Cảnh báo tồn kho thấp (nếu stock từ 1 đến 10)
+    if (freshProduct.stock > 0 && freshProduct.stock <= 10) {
+      Alert.alert(
+        'Cảnh báo tồn kho thấp ⚠️',
+        `Sản phẩm "${freshProduct.name}" sắp hết hàng trong hệ thống siêu thị (chỉ còn ${freshProduct.stock} sản phẩm). Quý khách vui lòng cân nhắc mua số lượng vừa đủ!`
+      );
     }
 
     // 2. Cập nhật giỏ hàng
     let newCart: CartItem[];
     if (existingItem) {
       newCart = cart.map((item) =>
-        item.id === product.id ? { ...item, quantity: requestedQty } : item
+        item.id === freshProduct.id ? { ...item, quantity: requestedQty } : item
       );
     } else {
-      newCart = [...cart, { ...product, quantity }];
+      newCart = [...cart, { ...freshProduct, quantity }];
     }
 
     setCart(newCart);
@@ -260,6 +271,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const item = cart.find((i) => i.id === productId);
     if (!item) return;
 
+    // Lấy thông tin tồn kho thực tế mới nhất từ danh sách products
+    const freshProduct = products.find((p) => p.id === productId) || item;
+
     const newQty = item.quantity + delta;
 
     if (newQty <= 0) {
@@ -282,9 +296,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       );
     } else {
       // Kiểm tra kho
-      if (newQty > item.stock) {
-        Alert.alert('Không thể tăng thêm', `Sản phẩm này chỉ còn tối đa ${item.stock} cái trong kho.`);
+      if (newQty > freshProduct.stock) {
+        Alert.alert('Không thể tăng thêm', `Sản phẩm này chỉ còn tối đa ${freshProduct.stock} cái trong kho.`);
         return;
+      }
+
+      // Cảnh báo tồn kho thấp (nếu stock từ 1 đến 10 và đang tăng số lượng)
+      if (freshProduct.stock > 0 && freshProduct.stock <= 10 && delta > 0) {
+        Alert.alert(
+          'Cảnh báo tồn kho thấp ⚠️',
+          `Sản phẩm "${freshProduct.name}" sắp hết hàng trong hệ thống siêu thị (chỉ còn ${freshProduct.stock} sản phẩm). Quý khách vui lòng cân nhắc mua số lượng vừa đủ!`
+        );
       }
 
       const newCart = cart.map((i) =>
@@ -376,8 +398,20 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setReceipts(newReceipts);
     setCurrentReceipt(newReceipt);
 
+    // Giảm tồn kho sản phẩm trong mảng products dựa trên giỏ hàng vừa mua
+    const updatedProducts = products.map((p) => {
+      const purchasedItem = cart.find((item) => item.id === p.id);
+      if (purchasedItem) {
+        const remainingStock = Math.max(0, p.stock - purchasedItem.quantity);
+        return { ...p, stock: remainingStock };
+      }
+      return p;
+    });
+    setProducts(updatedProducts);
+
     await saveState(STORAGE_KEYS.RECEIPTS, newReceipts);
     await saveState(STORAGE_KEYS.CURRENT_RECEIPT, newReceipt);
+    await saveState(STORAGE_KEYS.PRODUCTS, updatedProducts);
 
     return newReceipt;
   };
