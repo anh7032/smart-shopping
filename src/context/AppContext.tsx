@@ -1,10 +1,12 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Product, CartItem, SessionState, Receipt, ScreenName, UserRole } from '../types';
+import { Product, CartItem, SessionState, Receipt, ScreenName, UserRole, AuditLog } from '../types';
+import { mockProducts } from '../data/mockProducts';
 
 interface AppContextProps {
   // State
+  products: Product[];
   cart: CartItem[];
   session: SessionState | null;
   userRole: UserRole;
@@ -14,6 +16,7 @@ interface AppContextProps {
   selectedProduct: Product | null;
   selectedCategory: string | null;
   isLoading: boolean;
+  auditLogs: AuditLog[];
 
   // Actions
   setRole: (role: UserRole) => void;
@@ -34,6 +37,9 @@ interface AppContextProps {
   removeFromCart: (productId: string) => Promise<void>;
   checkout: (paymentMethod: Receipt['paymentMethod']) => Promise<Receipt>;
   updateReceipt: (updatedReceipt: Receipt) => Promise<void>;
+  updateProduct: (updatedProduct: Product) => Promise<void>;
+  resetProducts: () => Promise<void>;
+  logAuditAction: (action: string, target: string, description: string) => Promise<void>;
 }
 
 const AppContext = createContext<AppContextProps | undefined>(undefined);
@@ -45,9 +51,12 @@ const STORAGE_KEYS = {
   CURRENT_SCREEN: '@smart_shopping_current_screen',
   RECEIPTS: '@smart_shopping_receipts',
   CURRENT_RECEIPT: '@smart_shopping_current_receipt',
+  PRODUCTS: '@smart_shopping_products_state',
+  AUDIT_LOGS: '@smart_shopping_audit_logs',
 };
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [products, setProducts] = useState<Product[]>([]);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [session, setSession] = useState<SessionState | null>(null);
   const [userRole, setUserRole] = useState<UserRole>('customer');
@@ -57,6 +66,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
 
   // Load state from AsyncStorage on startup
   useEffect(() => {
@@ -68,6 +78,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         const storedScreen = await AsyncStorage.getItem(STORAGE_KEYS.CURRENT_SCREEN);
         const storedReceipts = await AsyncStorage.getItem(STORAGE_KEYS.RECEIPTS);
         const storedCurrentReceipt = await AsyncStorage.getItem(STORAGE_KEYS.CURRENT_RECEIPT);
+        const storedProducts = await AsyncStorage.getItem(STORAGE_KEYS.PRODUCTS);
+        const storedAuditLogs = await AsyncStorage.getItem(STORAGE_KEYS.AUDIT_LOGS);
 
         if (storedCart) setCart(JSON.parse(storedCart));
         if (storedSession) setSession(JSON.parse(storedSession));
@@ -75,6 +87,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         if (storedScreen) setCurrentScreen(JSON.parse(storedScreen) as ScreenName);
         if (storedReceipts) setReceipts(JSON.parse(storedReceipts));
         if (storedCurrentReceipt) setCurrentReceipt(JSON.parse(storedCurrentReceipt));
+        if (storedProducts) {
+          setProducts(JSON.parse(storedProducts));
+        } else {
+          setProducts(mockProducts);
+          await AsyncStorage.setItem(STORAGE_KEYS.PRODUCTS, JSON.stringify(mockProducts));
+        }
+        if (storedAuditLogs) setAuditLogs(JSON.parse(storedAuditLogs));
 
         // Khởi tạo database hội viên ảo trong AsyncStorage nếu chưa có
         const storedMembers = await AsyncStorage.getItem('@smart_shopping_members');
@@ -374,9 +393,35 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
+  const updateProduct = async (updatedProduct: Product) => {
+    const updatedList = products.map((p) => (p.id === updatedProduct.id ? updatedProduct : p));
+    setProducts(updatedList);
+    await saveState(STORAGE_KEYS.PRODUCTS, updatedList);
+  };
+
+  const resetProducts = async () => {
+    setProducts(mockProducts);
+    await saveState(STORAGE_KEYS.PRODUCTS, mockProducts);
+  };
+
+  const logAuditAction = async (action: string, target: string, description: string) => {
+    const newLog: AuditLog = {
+      id: `LOG-${Math.floor(100000 + Math.random() * 900000)}`,
+      userRole,
+      action,
+      target,
+      timestamp: new Date().toLocaleString('vi-VN'),
+      description,
+    };
+    const updatedLogs = [newLog, ...auditLogs];
+    setAuditLogs(updatedLogs);
+    await saveState(STORAGE_KEYS.AUDIT_LOGS, updatedLogs);
+  };
+
   return (
     <AppContext.Provider
       value={{
+        products,
         cart,
         session,
         userRole,
@@ -386,6 +431,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         selectedProduct,
         selectedCategory,
         isLoading,
+        auditLogs,
         setRole,
         navigate,
         startSession,
@@ -396,6 +442,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         removeFromCart,
         checkout,
         updateReceipt,
+        updateProduct,
+        resetProducts,
+        logAuditAction,
       }}
     >
       {children}

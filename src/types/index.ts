@@ -20,9 +20,23 @@ export type ScreenName =
   | 'manager_dashboard'
   | 'exit_verification'
   | 'verification_result'
-  | 'session_complete';
+  | 'session_complete'
+  | 'staff_dashboard'
+  | 'product_management'
+  | 'product_edit'
+  | 'shelf_management'
+  | 'inventory_alerts'
+  | 'exit_verification_queue'
+  | 'promotion_management'
+  | 'promotion_analytics'
+  | 'manager_alert_center'
+  | 'integration_status'
+  | 'sync_history'
+  | 'audit_log'
+  | 'requirement_coverage'
+  | 'demo_launcher';
 
-export type UserRole = 'customer' | 'vip' | 'inspector' | 'manager' | 'register';
+export type UserRole = 'customer' | 'vip' | 'inspector' | 'manager' | 'register' | 'store_staff' | 'exit_staff';
 
 export type Product = {
   id: string;
@@ -38,6 +52,8 @@ export type Product = {
   image?: any;
   rating?: number; // Hỗ trợ hiển thị rating cũ
   badge?: string;  // Hỗ trợ hiển thị nhãn cũ
+  isActive?: boolean; // Trạng thái hoạt động (mặc định là true nếu undefined)
+  sku?: string; // Mã SKU của sản phẩm
 };
 
 export type CartItem = Product & {
@@ -57,7 +73,7 @@ export type SessionState = {
   loyaltyPoints: number; // điểm tích lũy
 };
 
-export type ReceiptStatus = 'paid' | 'checked' | 'discrepancy';
+export type ReceiptStatus = 'paid' | 'checked' | 'discrepancy' | 'resolved' | 'cancelled';
 
 export type Receipt = {
   id: string; // Mã hóa đơn, ví dụ: HD-123456
@@ -75,4 +91,14 @@ export type Receipt = {
   additionalPaymentPaid?: boolean;
   checkedBy?: string; // Tên nhân viên kiểm soát
   discrepancyItems?: { id: string; name: string; price: number; quantity: number }[]; // Các mặt hàng chênh lệch phát hiện thêm
+  resolutionNote?: string; // Ghi chú giải quyết chênh lệch từ Store Staff
+};
+
+export type AuditLog = {
+  id: string;
+  userRole: UserRole;
+  action: string;
+  target: string;
+  timestamp: string;
+  description: string;
 };
