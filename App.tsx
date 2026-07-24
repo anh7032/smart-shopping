@@ -30,6 +30,7 @@ import { InventoryAlertScreen } from './src/screens/InventoryAlertScreen';
 import { ExitVerificationQueueScreen } from './src/screens/ExitVerificationQueueScreen';
 import { PromotionManagementScreen } from './src/screens/PromotionManagementScreen';
 import { ManagerAlertCenterScreen } from './src/screens/ManagerAlertCenterScreen';
+import { IntegrationStatusScreen } from './src/screens/IntegrationStatusScreen';
 import { BottomNavigation } from './src/components/BottomNavigation';
 import { COLORS } from './src/components/Theme';
 
@@ -101,6 +102,8 @@ function MainContainer() {
         return <PromotionManagementScreen />;
       case 'manager_alert_center':
         return <ManagerAlertCenterScreen />;
+      case 'integration_status':
+        return <IntegrationStatusScreen />;
       default:
         // Phục vụ làm màn hình chờ/Coming soon cho các màn hình Giai đoạn sau
         return <ComingSoonScreen />;
