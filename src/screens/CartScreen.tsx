@@ -6,12 +6,12 @@ import {
   Pressable,
   StyleSheet,
   Alert,
-  Image,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useApp } from '../context/AppContext';
 import { CartItem, Product } from '../types';
 import { COLORS, SHADOW, TOP_INSET, money } from '../components/Theme';
+import { ProductImage } from '../components/ProductImage';
 
 export const CartScreen: React.FC = () => {
   const { cart, session, changeQuantity, removeFromCart, navigate, addToCart, products, getCartTotals } = useApp();
@@ -212,13 +212,12 @@ export const CartScreen: React.FC = () => {
                     <Text style={styles.aiMatchText}>🔥 {confidence}% Match</Text>
                   </View>
 
-                  {product.image ? (
-                    <Image source={product.image} style={styles.aiProductImage} />
-                  ) : (
-                    <View style={styles.aiProductImagePlaceholder}>
-                      <Ionicons name="image-outline" size={24} color="#A6B3A9" />
-                    </View>
-                  )}
+                  <ProductImage
+                    source={product.image}
+                    imageStyle={styles.aiProductImage}
+                    placeholderStyle={styles.aiProductImagePlaceholder}
+                    iconSize={24}
+                  />
 
                   <View style={styles.aiProductInfo}>
                     <Text style={styles.aiProductName} numberOfLines={1}>
@@ -292,15 +291,12 @@ const CartItemCard: React.FC<CartItemCardProps> = ({
 
   return (
     <View style={styles.cartItemCard}>
-      {item.image ? (
-        <Image source={item.image} style={styles.cartItemImage} />
-      ) : (
-        <View style={styles.cartImagePlaceholder}>
-          <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-            <Ionicons name="image-outline" size={24} color="#A6B3A9" />
-          </View>
-        </View>
-      )}
+      <ProductImage
+        source={item.image}
+        imageStyle={styles.cartItemImage}
+        placeholderStyle={styles.cartImagePlaceholder}
+        iconSize={24}
+      />
 
       <View style={styles.cartItemInfo}>
         <View style={styles.cartItemTopRow}>

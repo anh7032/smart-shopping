@@ -40,8 +40,8 @@ function rowToProduct(row: ProductRow): Product {
   };
 }
 
-function productToRow(product: Product): ProductRow {
-  return {
+function productToRow(product: Product): Omit<ProductRow, 'image_url'> & { image_url?: string } {
+  const row: Omit<ProductRow, 'image_url'> & { image_url?: string } = {
     id: product.id,
     sku: product.sku ?? null,
     barcode: product.barcode,
@@ -56,8 +56,13 @@ function productToRow(product: Product): ProductRow {
     rating: product.rating ?? null,
     badge: product.badge ?? null,
     is_active: product.isActive ?? true,
-    image_url: product.imageUrl ?? null,
   };
+  // Chỉ gửi image_url khi thực sự có giá trị — nếu không, upsert (merge-duplicates)
+  // sẽ giữ nguyên ảnh người dùng đã set tay trên Supabase thay vì ghi đè thành null.
+  if (product.imageUrl) {
+    row.image_url = product.imageUrl;
+  }
+  return row;
 }
 
 export async function fetchProductsFromSupabase(): Promise<Product[]> {
@@ -78,4 +83,16 @@ export async function upsertProductToSupabase(product: Product): Promise<void> {
 export async function upsertProductsToSupabase(products: Product[]): Promise<void> {
   const { error } = await supabase.from('products').upsert(products.map(productToRow));
   if (error) throw error;
+}
+
+// Dùng riêng cho lúc thanh toán: chỉ đụng cột stock, không kéo theo image_url/mô tả...
+// tránh ghi đè nhầm các cột khác khi nhiều sản phẩm trong giỏ có dữ liệu ảnh khác nhau.
+export async function updateProductStockInSupabase(
+  updates: { id: string; stock: number }[]
+): Promise<void> {
+  const results = await Promise.all(
+    updates.map(({ id, stock }) => supabase.from('products').update({ stock }).eq('id', id))
+  );
+  const failed = results.find((r) => r.error);
+  if (failed?.error) throw failed.error;
 }

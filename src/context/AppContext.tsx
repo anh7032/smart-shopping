@@ -5,7 +5,7 @@ import { Product, CartItem, SessionState, Receipt, ScreenName, UserRole, AuditLo
 import { mockProducts } from '../data/mockProducts';
 import { attachLocalImage } from '../data/localProductImages';
 import { isSupabaseConfigured } from '../lib/supabase';
-import { fetchProductsFromSupabase, upsertProductToSupabase, upsertProductsToSupabase } from '../lib/productsApi';
+import { fetchProductsFromSupabase, upsertProductToSupabase, upsertProductsToSupabase, updateProductStockInSupabase } from '../lib/productsApi';
 
 interface AppContextProps {
   // State
@@ -636,8 +636,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     await persistProducts(updatedProducts);
 
     if (isSupabaseConfigured) {
-      const changedProducts = updatedProducts.filter((p) => cart.some((item) => item.id === p.id));
-      upsertProductsToSupabase(changedProducts).catch((error) =>
+      const stockUpdates = updatedProducts
+        .filter((p) => cart.some((item) => item.id === p.id))
+        .map((p) => ({ id: p.id, stock: p.stock }));
+      updateProductStockInSupabase(stockUpdates).catch((error) =>
         console.error('Lỗi đồng bộ tồn kho lên Supabase:', error)
       );
     }

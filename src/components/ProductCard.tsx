@@ -1,8 +1,9 @@
 import React from 'react';
-import { Pressable, View, Text, Image, StyleSheet, Dimensions } from 'react-native';
+import { Pressable, View, Text, StyleSheet, Dimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Product } from '../types';
 import { COLORS, SHADOW, money } from './Theme';
+import { ProductImage } from './ProductImage';
 
 interface ProductCardProps {
   product: Product;
@@ -19,15 +20,11 @@ export const ProductCard: React.FC<ProductCardProps> = ({
 }) => {
   return (
     <Pressable style={styles.productCard} onPress={onPress}>
-      {product.image ? (
-        <Image source={product.image} style={styles.productImage} />
-      ) : (
-        <View style={styles.productImagePlaceholder}>
-          <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-            <Ionicons name="image-outline" size={32} color="#A6B3A9" />
-          </View>
-        </View>
-      )}
+      <ProductImage
+        source={product.image}
+        imageStyle={styles.productImage}
+        placeholderStyle={styles.productImagePlaceholder}
+      />
 
       {product.discount ? (
         <View style={styles.discountBadge}>

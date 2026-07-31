@@ -7,7 +7,6 @@ import {
   Pressable,
   StyleSheet,
   ActivityIndicator,
-  Image,
   Alert,
   KeyboardAvoidingView,
   Platform,
@@ -17,6 +16,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useApp } from '../context/AppContext';
 import { Product } from '../types';
 import { COLORS, SHADOW, TOP_INSET, money } from '../components/Theme';
+import { ProductImage } from '../components/ProductImage';
 
 interface Message {
   id: string;
@@ -227,13 +227,13 @@ export const AISuggestionScreen: React.FC = () => {
                         const inCart = cart.find((item) => item.id === p.id);
                         return (
                           <View key={p.id} style={styles.aiProductCard}>
-                            {p.image ? (
-                              <Image source={p.image} style={styles.aiProdImage} />
-                            ) : (
-                              <View style={styles.aiProdPlaceholder}>
-                                <Ionicons name="image" size={20} color={COLORS.MUTED} />
-                              </View>
-                            )}
+                            <ProductImage
+                              source={p.image}
+                              imageStyle={styles.aiProdImage}
+                              placeholderStyle={styles.aiProdPlaceholder}
+                              iconSize={20}
+                              iconColor={COLORS.MUTED}
+                            />
                             <View style={styles.aiProdInfo}>
                               <Text style={styles.aiProdName} numberOfLines={1}>
                                 {p.name}

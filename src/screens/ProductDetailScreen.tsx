@@ -4,13 +4,13 @@ import {
   Text,
   ScrollView,
   Pressable,
-  Image,
   StyleSheet,
   Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useApp } from '../context/AppContext';
 import { COLORS, SHADOW, TOP_INSET, money } from '../components/Theme';
+import { ProductImage } from '../components/ProductImage';
 
 export const ProductDetailScreen: React.FC = () => {
   const { selectedProduct, navigate, cart, addToCart, changeQuantity, selectedCategory } = useApp();
@@ -80,13 +80,12 @@ export const ProductDetailScreen: React.FC = () => {
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
         {/* Image Card */}
         <View style={styles.imageContainer}>
-          {product.image ? (
-            <Image source={product.image} style={styles.image} />
-          ) : (
-            <View style={styles.imagePlaceholder}>
-              <Ionicons name="image-outline" size={80} color="#A6B3A9" />
-            </View>
-          )}
+          <ProductImage
+            source={product.image}
+            imageStyle={styles.image}
+            placeholderStyle={styles.imagePlaceholder}
+            iconSize={80}
+          />
 
           {!!product.discount && (
             <View style={styles.discountBadge}>

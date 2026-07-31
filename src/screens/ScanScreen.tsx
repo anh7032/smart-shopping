@@ -6,7 +6,6 @@ import {
   Pressable,
   StyleSheet,
   Alert,
-  Image,
   Dimensions,
   ScrollView,
 } from 'react-native';
@@ -14,6 +13,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useApp } from '../context/AppContext';
 import { Product } from '../types';
 import { COLORS, SHADOW, TOP_INSET, money } from '../components/Theme';
+import { ProductImage } from '../components/ProductImage';
 
 export const ScanScreen: React.FC = () => {
   const { addToCart, navigate, products } = useApp();
@@ -124,13 +124,11 @@ export const ScanScreen: React.FC = () => {
             </View>
 
             <View style={styles.scannedProductRow}>
-              {scannedProduct.image ? (
-                <Image source={scannedProduct.image} style={styles.scannedImage} />
-              ) : (
-                <View style={styles.scannedImagePlaceholder}>
-                  <Ionicons name="image-outline" size={32} color="#A6B3A9" />
-                </View>
-              )}
+              <ProductImage
+                source={scannedProduct.image}
+                imageStyle={styles.scannedImage}
+                placeholderStyle={styles.scannedImagePlaceholder}
+              />
               <View style={styles.scannedInfo}>
                 <Text style={styles.scannedProductName} numberOfLines={2}>
                   {scannedProduct.name}

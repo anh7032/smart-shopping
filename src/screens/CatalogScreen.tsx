@@ -8,11 +8,13 @@ import {
   SafeAreaView,
   Dimensions,
   RefreshControl,
+  FlatList,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useApp } from '../context/AppContext';
 import { ProductCard } from '../components/ProductCard';
 import { COLORS, SHADOW, TOP_INSET } from '../components/Theme';
+import { Product } from '../types';
 
 const CATEGORIES_LIST = ['Tất cả', 'Thực phẩm', 'Đồ uống', 'Chăm sóc', 'Gia dụng', 'Khuyến mãi'];
 
@@ -90,40 +92,41 @@ export const CatalogScreen: React.FC = () => {
         </ScrollView>
       </View>
 
-      {/* Product Grid */}
-      <ScrollView
+      {/* Product Grid — FlatList: chỉ render/tải ảnh sản phẩm đang hiển thị trên màn hình,
+          tránh giải mã hết ảnh của toàn bộ danh mục cùng lúc (gây tràn bộ nhớ ảnh trên Android). */}
+      <FlatList
+        data={filteredProducts}
+        keyExtractor={(p) => p.id}
+        numColumns={2}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
+        columnWrapperStyle={styles.productRow}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} colors={[COLORS.GREEN]} />
         }
-      >
-        <Text style={styles.resultCount}>
-          Hiển thị {filteredProducts.length} sản phẩm
-        </Text>
-
-        {filteredProducts.length === 0 ? (
+        ListHeaderComponent={
+          <Text style={styles.resultCount}>
+            Hiển thị {filteredProducts.length} sản phẩm
+          </Text>
+        }
+        ListEmptyComponent={
           <View style={styles.emptyContainer}>
             <Ionicons name="cube-outline" size={48} color={COLORS.MUTED} />
             <Text style={styles.emptyText}>Không tìm thấy sản phẩm nào trong danh mục này.</Text>
           </View>
-        ) : (
-          <View style={styles.productGrid}>
-            {filteredProducts.map((p) => {
-              const inCart = cart.find((item) => item.id === p.id);
-              return (
-                <ProductCard
-                  key={p.id}
-                  product={p}
-                  quantityInCart={inCart?.quantity || 0}
-                  onAdd={() => addToCart(p)}
-                  onPress={() => navigate('product_detail', { product: p })}
-                />
-              );
-            })}
-          </View>
-        )}
-      </ScrollView>
+        }
+        renderItem={({ item: p }: { item: Product }) => {
+          const inCart = cart.find((item) => item.id === p.id);
+          return (
+            <ProductCard
+              product={p}
+              quantityInCart={inCart?.quantity || 0}
+              onAdd={() => addToCart(p)}
+              onPress={() => navigate('product_detail', { product: p })}
+            />
+          );
+        }}
+      />
     </View>
   );
 };
@@ -236,9 +239,8 @@ const styles = StyleSheet.create({
     color: COLORS.MUTED,
     textAlign: 'center',
   },
-  productGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+  productRow: {
     gap: 10,
+    marginBottom: 10,
   },
 });
