@@ -49,7 +49,8 @@ export type Product = {
   shelf: string; // ví dụ: "Khu thực phẩm tươi - Dãy A3 - Kệ số 2 - Tầng 1"
   stock: number;
   description: string;
-  image?: any;
+  image?: any; // Ảnh bundle cục bộ (require), gán ở client, KHÔNG lưu trong Supabase
+  imageUrl?: string; // URL ảnh từ xa (Supabase Storage/CDN), dùng khi không có ảnh cục bộ
   rating?: number; // Hỗ trợ hiển thị rating cũ
   badge?: string;  // Hỗ trợ hiển thị nhãn cũ
   isActive?: boolean; // Trạng thái hoạt động (mặc định là true nếu undefined)

@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -7,6 +7,7 @@ import {
   StyleSheet,
   SafeAreaView,
   Dimensions,
+  RefreshControl,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useApp } from '../context/AppContext';
@@ -16,7 +17,14 @@ import { COLORS, SHADOW, TOP_INSET } from '../components/Theme';
 const CATEGORIES_LIST = ['Tất cả', 'Thực phẩm', 'Đồ uống', 'Chăm sóc', 'Gia dụng', 'Khuyến mãi'];
 
 export const CatalogScreen: React.FC = () => {
-  const { selectedCategory, navigate, cart, addToCart, products } = useApp();
+  const { selectedCategory, navigate, cart, addToCart, products, refreshProducts } = useApp();
+  const [refreshing, setRefreshing] = useState(false);
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await refreshProducts();
+    setRefreshing(false);
+  };
 
   const currentCategory = selectedCategory || 'Tất cả';
 
@@ -86,6 +94,9 @@ export const CatalogScreen: React.FC = () => {
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} colors={[COLORS.GREEN]} />
+        }
       >
         <Text style={styles.resultCount}>
           Hiển thị {filteredProducts.length} sản phẩm

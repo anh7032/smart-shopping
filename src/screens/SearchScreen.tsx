@@ -7,6 +7,7 @@ import {
   Pressable,
   StyleSheet,
   ActivityIndicator,
+  RefreshControl,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useApp } from '../context/AppContext';
@@ -14,10 +15,17 @@ import { ProductCard } from '../components/ProductCard';
 import { COLORS, SHADOW, TOP_INSET } from '../components/Theme';
 
 export const SearchScreen: React.FC = () => {
-  const { navigate, cart, addToCart, products } = useApp();
+  const { navigate, cart, addToCart, products, refreshProducts } = useApp();
   const [query, setQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const inputRef = useRef<TextInput>(null);
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await refreshProducts();
+    setRefreshing(false);
+  };
 
   // Auto-focus input on mount
   useEffect(() => {
@@ -93,6 +101,9 @@ export const SearchScreen: React.FC = () => {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
         keyboardShouldPersistTaps="handled"
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} colors={[COLORS.GREEN]} />
+        }
       >
         {isSearching ? (
           <View style={styles.loadingContainer}>

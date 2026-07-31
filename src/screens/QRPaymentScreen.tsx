@@ -13,12 +13,11 @@ import { useApp } from '../context/AppContext';
 import { COLORS, SHADOW, TOP_INSET, money } from '../components/Theme';
 
 export const QRPaymentScreen: React.FC = () => {
-  const { cart, selectedCategory, checkout, navigate } = useApp();
+  const { cart, pendingPaymentMethod, checkout, navigate } = useApp();
   const [secondsLeft, setSecondsLeft] = useState(300); // 5 minutes count down
   const [isProcessing, setIsProcessing] = useState(false);
 
-  // Extract payment method from our carrier selectedCategory
-  const paymentMethod = (selectedCategory as 'qr_bank' | 'e_wallet' | 'member_card') || 'qr_bank';
+  const paymentMethod = pendingPaymentMethod || 'qr_bank';
 
   // Tick down timer
   useEffect(() => {

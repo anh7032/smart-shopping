@@ -1,9 +1,10 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   Dimensions,
   Image,
   ImageBackground,
   Pressable,
+  RefreshControl,
   ScrollView,
   StyleSheet,
   Text,
@@ -26,7 +27,14 @@ const categories: { label: string; icon: IconName; color: string }[] = [
 ];
 
 export const HomeScreen: React.FC = () => {
-  const { cart, session, navigate, addToCart, userRole, products, endSession } = useApp();
+  const { cart, session, navigate, addToCart, userRole, products, endSession, refreshProducts } = useApp();
+  const [refreshing, setRefreshing] = useState(false);
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await refreshProducts();
+    setRefreshing(false);
+  };
 
   const totalPrice = useMemo(
     () => cart.reduce((sum, item) => sum + item.price * item.quantity, 0),
@@ -63,6 +71,9 @@ export const HomeScreen: React.FC = () => {
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.homeScrollContent}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} colors={[COLORS.GREEN]} />
+        }
       >
         {/* Header */}
         <View style={styles.homeHeader}>

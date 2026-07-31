@@ -34,7 +34,7 @@ export const ExitVerificationScreen: React.FC = () => {
   const handleSimulateScan = (scenario: 'match' | 'mismatch') => {
     // Switch role to inspector for exit control simulation
     setRole('inspector');
-    navigate('verification_result', { receipt, category: scenario } as any);
+    navigate('verification_result', { receipt, verificationScenario: scenario });
   };
 
   return (

@@ -5,11 +5,11 @@ import { useApp } from '../context/AppContext';
 import { COLORS, SHADOW, TOP_INSET, money } from '../components/Theme';
 
 export const VerificationResultScreen: React.FC = () => {
-  const { currentReceipt, selectedCategory, endSession, navigate, updateReceipt, addManagerAlert, setRole } = useApp();
-  
+  const { currentReceipt, verificationScenario, endSession, navigate, updateReceipt, addManagerAlert, setRole } = useApp();
+
   // States to handle interactive mock actions inside mismatch scenario
   const [simulationState, setSimulationState] = useState<'MATCH' | 'MISMATCH'>(
-    selectedCategory === 'mismatch' ? 'MISMATCH' : 'MATCH'
+    verificationScenario === 'mismatch' ? 'MISMATCH' : 'MATCH'
   );
   const [isProcessingAction, setIsProcessingAction] = useState(false);
 

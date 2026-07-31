@@ -40,9 +40,8 @@ export const CheckoutScreen: React.FC = () => {
       return;
     }
 
-    // Chuyển sang màn hình Thanh toán QR giả lập
-    // Chúng ta sẽ truyền thông số qua navigate (AppContext sẽ lưu tạm hóa đơn hoặc phương thức thanh toán)
-    navigate('qr_payment', { category: paymentMethod }); // Lợi dụng trường category có sẵn để truyền phương thức thanh toán dạng string!
+    // Chuyển sang màn hình Thanh toán QR giả lập, truyền phương thức thanh toán qua state riêng
+    navigate('qr_payment', { paymentMethod });
   };
 
   return (

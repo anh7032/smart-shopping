@@ -3,6 +3,9 @@ import { Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Product, CartItem, SessionState, Receipt, ScreenName, UserRole, AuditLog, Promotion, ManagerAlert, AlertSeverity, AlertStatus, IntegrationStatus, SyncHistoryEntry } from '../types';
 import { mockProducts } from '../data/mockProducts';
+import { attachLocalImage } from '../data/localProductImages';
+import { isSupabaseConfigured } from '../lib/supabase';
+import { fetchProductsFromSupabase, upsertProductToSupabase, upsertProductsToSupabase } from '../lib/productsApi';
 
 interface AppContextProps {
   // State
@@ -24,9 +27,21 @@ interface AppContextProps {
   lastSync: string;
   syncHistory: SyncHistoryEntry[];
 
+  pendingPaymentMethod: Receipt['paymentMethod'] | null;
+  verificationScenario: 'match' | 'mismatch' | null;
+
   // Actions
   setRole: (role: UserRole) => void;
-  navigate: (screen: ScreenName, params?: { product?: Product; category?: string; receipt?: Receipt }) => void;
+  navigate: (
+    screen: ScreenName,
+    params?: {
+      product?: Product;
+      category?: string;
+      receipt?: Receipt;
+      paymentMethod?: Receipt['paymentMethod'];
+      verificationScenario?: 'match' | 'mismatch';
+    }
+  ) => void;
   startSession: (
     customerName: string,
     cartCode: string,
@@ -45,6 +60,7 @@ interface AppContextProps {
   updateReceipt: (updatedReceipt: Receipt) => Promise<void>;
   updateProduct: (updatedProduct: Product) => Promise<void>;
   resetProducts: () => Promise<void>;
+  refreshProducts: () => Promise<void>;
   logAuditAction: (action: string, target: string, description: string) => Promise<void>;
   addPromotion: (promo: Omit<Promotion, 'id' | 'usageCount' | 'revenueGenerated' | 'totalDiscountAmount'>) => Promise<void>;
   updatePromotion: (promo: Promotion) => Promise<void>;
@@ -85,6 +101,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [currentReceipt, setCurrentReceipt] = useState<Receipt | null>(null);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [pendingPaymentMethod, setPendingPaymentMethod] = useState<Receipt['paymentMethod'] | null>(null);
+  const [verificationScenario, setVerificationScenario] = useState<'match' | 'mismatch' | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
   const [promotions, setPromotions] = useState<Promotion[]>([]);
@@ -98,20 +116,39 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   useEffect(() => {
     const hydrateState = async () => {
       try {
-        const storedCart = await AsyncStorage.getItem(STORAGE_KEYS.CART);
-        const storedSession = await AsyncStorage.getItem(STORAGE_KEYS.SESSION);
-        const storedRole = await AsyncStorage.getItem(STORAGE_KEYS.USER_ROLE);
-        const storedScreen = await AsyncStorage.getItem(STORAGE_KEYS.CURRENT_SCREEN);
-        const storedReceipts = await AsyncStorage.getItem(STORAGE_KEYS.RECEIPTS);
-        const storedCurrentReceipt = await AsyncStorage.getItem(STORAGE_KEYS.CURRENT_RECEIPT);
-        const storedProducts = await AsyncStorage.getItem(STORAGE_KEYS.PRODUCTS);
-        const storedAuditLogs = await AsyncStorage.getItem(STORAGE_KEYS.AUDIT_LOGS);
-        const storedPromotions = await AsyncStorage.getItem(STORAGE_KEYS.PROMOTIONS);
-        const storedAlerts = await AsyncStorage.getItem(STORAGE_KEYS.MANAGER_ALERTS);
-        const storedErpStatus = await AsyncStorage.getItem(STORAGE_KEYS.ERP_STATUS);
-        const storedPosStatus = await AsyncStorage.getItem(STORAGE_KEYS.POS_STATUS);
-        const storedLastSync = await AsyncStorage.getItem(STORAGE_KEYS.LAST_SYNC);
-        const storedSyncHistory = await AsyncStorage.getItem(STORAGE_KEYS.SYNC_HISTORY);
+        const [
+          storedCart,
+          storedSession,
+          storedRole,
+          storedScreen,
+          storedReceipts,
+          storedCurrentReceipt,
+          storedProducts,
+          storedAuditLogs,
+          storedPromotions,
+          storedAlerts,
+          storedErpStatus,
+          storedPosStatus,
+          storedLastSync,
+          storedSyncHistory,
+          storedMembers,
+        ] = await Promise.all([
+          AsyncStorage.getItem(STORAGE_KEYS.CART),
+          AsyncStorage.getItem(STORAGE_KEYS.SESSION),
+          AsyncStorage.getItem(STORAGE_KEYS.USER_ROLE),
+          AsyncStorage.getItem(STORAGE_KEYS.CURRENT_SCREEN),
+          AsyncStorage.getItem(STORAGE_KEYS.RECEIPTS),
+          AsyncStorage.getItem(STORAGE_KEYS.CURRENT_RECEIPT),
+          AsyncStorage.getItem(STORAGE_KEYS.PRODUCTS),
+          AsyncStorage.getItem(STORAGE_KEYS.AUDIT_LOGS),
+          AsyncStorage.getItem(STORAGE_KEYS.PROMOTIONS),
+          AsyncStorage.getItem(STORAGE_KEYS.MANAGER_ALERTS),
+          AsyncStorage.getItem(STORAGE_KEYS.ERP_STATUS),
+          AsyncStorage.getItem(STORAGE_KEYS.POS_STATUS),
+          AsyncStorage.getItem(STORAGE_KEYS.LAST_SYNC),
+          AsyncStorage.getItem(STORAGE_KEYS.SYNC_HISTORY),
+          AsyncStorage.getItem('@smart_shopping_members'),
+        ]);
 
         if (storedCart) setCart(JSON.parse(storedCart));
         if (storedSession) setSession(JSON.parse(storedSession));
@@ -119,12 +156,27 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         if (storedScreen) setCurrentScreen(JSON.parse(storedScreen) as ScreenName);
         if (storedReceipts) setReceipts(JSON.parse(storedReceipts));
         if (storedCurrentReceipt) setCurrentReceipt(JSON.parse(storedCurrentReceipt));
-        if (storedProducts) {
-          setProducts(JSON.parse(storedProducts));
-        } else {
-          setProducts(mockProducts);
-          await AsyncStorage.setItem(STORAGE_KEYS.PRODUCTS, JSON.stringify(mockProducts));
+        // Nguồn sự thật cho danh mục sản phẩm là Supabase (nếu đã cấu hình .env).
+        // Nếu chưa cấu hình hoặc lỗi mạng, dùng bản cache AsyncStorage, cuối cùng mới rơi về mockProducts.
+        let loadedProducts: Product[] | null = null;
+        if (isSupabaseConfigured) {
+          try {
+            loadedProducts = await fetchProductsFromSupabase();
+          } catch (error) {
+            console.error('Lỗi tải sản phẩm từ Supabase, dùng dữ liệu cục bộ:', error);
+          }
         }
+        if (!loadedProducts || loadedProducts.length === 0) {
+          loadedProducts = storedProducts
+            ? (JSON.parse(storedProducts) as Product[]).map(attachLocalImage)
+            : mockProducts;
+        }
+        setProducts(loadedProducts);
+        // Không lưu `image` (require) vào AsyncStorage — asset id có thể đổi giữa các lần build/reload.
+        await AsyncStorage.setItem(
+          STORAGE_KEYS.PRODUCTS,
+          JSON.stringify(loadedProducts.map(({ image, ...rest }) => rest))
+        );
         if (storedAuditLogs) setAuditLogs(JSON.parse(storedAuditLogs));
 
         if (storedPromotions) {
@@ -230,7 +282,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         }
 
         // Khởi tạo database hội viên ảo trong AsyncStorage nếu chưa có
-        const storedMembers = await AsyncStorage.getItem('@smart_shopping_members');
         if (!storedMembers) {
           const defaultMembers = [
             {
@@ -271,6 +322,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
+  // Cập nhật state sản phẩm ở local + cache AsyncStorage (không lưu `image` vì đó là asset id cục bộ).
+  const persistProducts = async (list: Product[]) => {
+    setProducts(list);
+    await saveState(STORAGE_KEYS.PRODUCTS, list.map(({ image, ...rest }) => rest));
+  };
+
   const getCartTotals = (items: CartItem[]) => {
     let totalPrice = 0;
     let savings = 0;
@@ -305,7 +362,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const navigate = (
     screen: ScreenName,
-    params?: { product?: Product; category?: string; receipt?: Receipt }
+    params?: {
+      product?: Product;
+      category?: string;
+      receipt?: Receipt;
+      paymentMethod?: Receipt['paymentMethod'];
+      verificationScenario?: 'match' | 'mismatch';
+    }
   ) => {
     setCurrentScreen(screen);
     saveState(STORAGE_KEYS.CURRENT_SCREEN, screen);
@@ -313,6 +376,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     if (params) {
       if (params.product !== undefined) setSelectedProduct(params.product);
       if (params.category !== undefined) setSelectedCategory(params.category);
+      if (params.paymentMethod !== undefined) setPendingPaymentMethod(params.paymentMethod);
+      if (params.verificationScenario !== undefined) setVerificationScenario(params.verificationScenario);
       if (params.receipt !== undefined) {
         setCurrentReceipt(params.receipt);
         saveState(STORAGE_KEYS.CURRENT_RECEIPT, params.receipt);
@@ -568,11 +633,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }
       return p;
     });
-    setProducts(updatedProducts);
+    await persistProducts(updatedProducts);
+
+    if (isSupabaseConfigured) {
+      const changedProducts = updatedProducts.filter((p) => cart.some((item) => item.id === p.id));
+      upsertProductsToSupabase(changedProducts).catch((error) =>
+        console.error('Lỗi đồng bộ tồn kho lên Supabase:', error)
+      );
+    }
 
     await saveState(STORAGE_KEYS.RECEIPTS, newReceipts);
     await saveState(STORAGE_KEYS.CURRENT_RECEIPT, newReceipt);
-    await saveState(STORAGE_KEYS.PRODUCTS, updatedProducts);
 
     return newReceipt;
   };
@@ -590,13 +661,42 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const updateProduct = async (updatedProduct: Product) => {
     const updatedList = products.map((p) => (p.id === updatedProduct.id ? updatedProduct : p));
-    setProducts(updatedList);
-    await saveState(STORAGE_KEYS.PRODUCTS, updatedList);
+    await persistProducts(updatedList);
+
+    if (isSupabaseConfigured) {
+      try {
+        await upsertProductToSupabase(updatedProduct);
+      } catch (error) {
+        console.error('Lỗi lưu sản phẩm lên Supabase:', error);
+      }
+    }
   };
 
   const resetProducts = async () => {
-    setProducts(mockProducts);
-    await saveState(STORAGE_KEYS.PRODUCTS, mockProducts);
+    // Khôi phục danh mục sản phẩm về đúng dữ liệu mặc định ban đầu (mockProducts),
+    // kể cả trên Supabase (ghi đè mọi chỉnh sửa tồn kho/giá của Store Staff).
+    if (isSupabaseConfigured) {
+      try {
+        await upsertProductsToSupabase(mockProducts);
+      } catch (error) {
+        console.error('Lỗi khôi phục sản phẩm trên Supabase:', error);
+      }
+    }
+    await persistProducts(mockProducts);
+  };
+
+  // Tải lại danh sách sản phẩm mới nhất từ Supabase (dùng cho pull-to-refresh) —
+  // để sản phẩm/giá/tồn kho vừa thêm trên Supabase Dashboard xuất hiện mà không cần khởi động lại app.
+  const refreshProducts = async () => {
+    if (!isSupabaseConfigured) return;
+    try {
+      const latest = await fetchProductsFromSupabase();
+      if (latest.length > 0) {
+        await persistProducts(latest);
+      }
+    } catch (error) {
+      console.error('Lỗi làm mới danh sách sản phẩm từ Supabase:', error);
+    }
   };
 
   const logAuditAction = async (action: string, target: string, description: string) => {
@@ -789,6 +889,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         currentReceipt,
         selectedProduct,
         selectedCategory,
+        pendingPaymentMethod,
+        verificationScenario,
         isLoading,
         auditLogs,
         promotions,
@@ -809,6 +911,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         updateReceipt,
         updateProduct,
         resetProducts,
+        refreshProducts,
         logAuditAction,
         addPromotion,
         updatePromotion,
