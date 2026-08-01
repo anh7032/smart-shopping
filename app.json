@@ -26,6 +26,18 @@
     "web": {
       "favicon": "./assets/favicon.png"
     },
-    "backgroundColor": "#F4F7F4"
+    "backgroundColor": "#F4F7F4",
+    "extra": {
+      "eas": {
+        "projectId": "af3145b7-79cc-490f-921b-0ad90b934fab"
+      }
+    },
+    "owner": "anh7032",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/af3145b7-79cc-490f-921b-0ad90b934fab"
+    }
   }
 }
