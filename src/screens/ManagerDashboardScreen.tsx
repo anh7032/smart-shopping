@@ -1149,7 +1149,7 @@ const styles = StyleSheet.create({
 
   /* Loading collection overlay */
   loadingOverlay: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     backgroundColor: 'rgba(0,0,0,0.85)',
     zIndex: 1000,
     alignItems: 'center',

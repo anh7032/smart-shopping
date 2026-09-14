@@ -1,9 +1,10 @@
 import React from 'react';
-import { Pressable, View, Text, StyleSheet, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, Dimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Product } from '../types';
-import { COLORS, SHADOW, money } from './Theme';
+import { CARD_SHADOW, COLORS, money } from './Theme';
 import { ProductImage } from './ProductImage';
+import { AnimatedPressable } from './ui/AnimatedPressable';
 
 interface ProductCardProps {
   product: Product;
@@ -19,12 +20,15 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   onPress,
 }) => {
   return (
-    <Pressable style={styles.productCard} onPress={onPress}>
-      <ProductImage
-        source={product.image}
-        imageStyle={styles.productImage}
-        placeholderStyle={styles.productImagePlaceholder}
-      />
+    <AnimatedPressable style={styles.productCard} onPress={onPress}>
+      <View style={styles.imageWrap}>
+        <ProductImage
+          source={product.image}
+          imageStyle={styles.productImage}
+          placeholderStyle={styles.productImagePlaceholder}
+        />
+        <View style={styles.imageOverlay} />
+      </View>
 
       {product.discount ? (
         <View style={styles.discountBadge}>
@@ -62,17 +66,14 @@ export const ProductCard: React.FC<ProductCardProps> = ({
 
         {/* Double Actions Row: Chi tiết & Quét mã */}
         <View style={styles.buttonRow}>
-          <Pressable style={styles.detailButton} onPress={onPress}>
+          <AnimatedPressable style={styles.detailButton} onPress={onPress}>
             <Ionicons name="information-circle-outline" size={11} color={COLORS.GREEN} />
             <Text style={styles.detailButtonText} numberOfLines={1}>Chi tiết</Text>
-          </Pressable>
+          </AnimatedPressable>
 
-          <Pressable
+          <AnimatedPressable
             style={[styles.scanButton, quantityInCart > 0 && styles.scannedButton]}
-            onPress={(e) => {
-              e.stopPropagation();
-              onAdd();
-            }}
+            onPress={onAdd}
           >
             <Ionicons
               name={quantityInCart > 0 ? 'checkmark' : 'scan-outline'}
@@ -85,10 +86,10 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             >
               {quantityInCart > 0 ? `Đã quét (${quantityInCart})` : 'Quét mã'}
             </Text>
-          </Pressable>
+          </AnimatedPressable>
         </View>
       </View>
-    </Pressable>
+    </AnimatedPressable>
   );
 };
 
@@ -100,21 +101,33 @@ const CARD_WIDTH = (SCREEN_WIDTH - HORIZONTAL_PADDING * 2 - CARD_GAP) / 2;
 const styles = StyleSheet.create({
   productCard: {
     width: CARD_WIDTH,
-    borderRadius: 14,
-    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    backgroundColor: COLORS.CARD,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: COLORS.BORDER,
-    ...SHADOW,
+    borderColor: COLORS.SOFT_BORDER,
+    ...CARD_SHADOW,
+  },
+  imageWrap: {
+    position: 'relative',
+    backgroundColor: '#E8ECE9',
+  },
+  imageOverlay: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    height: 34,
+    backgroundColor: 'rgba(12, 45, 22, 0.08)',
   },
   productImagePlaceholder: {
     width: '100%',
-    height: 120,
+    height: 132,
     backgroundColor: '#E8ECE9',
   },
   productImage: {
     width: '100%',
-    height: 120,
+    height: 132,
     resizeMode: 'cover',
   },
   discountBadge: {
@@ -122,9 +135,11 @@ const styles = StyleSheet.create({
     left: 8,
     top: 8,
     backgroundColor: '#FF3E52',
-    borderRadius: 12,
-    paddingHorizontal: 7,
-    paddingVertical: 4,
+    borderRadius: 999,
+    paddingHorizontal: 8,
+    paddingVertical: 5,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.82)',
   },
   discountBadgeText: {
     color: '#FFFFFF',
@@ -135,10 +150,12 @@ const styles = StyleSheet.create({
     position: 'absolute',
     left: 8,
     top: 8,
-    backgroundColor: COLORS.GREEN,
-    borderRadius: 11,
-    paddingHorizontal: 7,
-    paddingVertical: 4,
+    backgroundColor: COLORS.DEEP_GREEN,
+    borderRadius: 999,
+    paddingHorizontal: 8,
+    paddingVertical: 5,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.65)',
   },
   productBadgeText: {
     color: '#FFFFFF',
@@ -146,14 +163,15 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
   productInfo: {
-    padding: 10,
+    padding: 12,
   },
   productName: {
     color: COLORS.TEXT,
-    fontSize: 12,
-    lineHeight: 16,
+    fontSize: 12.5,
+    lineHeight: 17,
     fontWeight: '800',
-    minHeight: 32,
+    minHeight: 34,
+    letterSpacing: 0.1,
   },
   productMetaRow: {
     flexDirection: 'row',
@@ -188,15 +206,15 @@ const styles = StyleSheet.create({
   },
   detailButton: {
     flex: 1,
-    height: 28,
-    borderRadius: 14,
+    height: 30,
+    borderRadius: 999,
     borderWidth: 1,
-    borderColor: COLORS.GREEN,
-    backgroundColor: '#FFFFFF',
+    borderColor: 'rgba(47,145,67,0.5)',
+    backgroundColor: COLORS.GLASS,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 2,
+    gap: 3,
   },
   detailButtonText: {
     color: COLORS.GREEN,
@@ -204,14 +222,16 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
   scanButton: {
-    flex: 1.1,
-    height: 28,
-    borderRadius: 14,
+    flex: 1.15,
+    height: 30,
+    borderRadius: 999,
     backgroundColor: COLORS.GREEN,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 2,
+    gap: 3,
+    borderWidth: 1,
+    borderColor: COLORS.DEEP_GREEN,
   },
   scannedButton: {
     backgroundColor: '#F0FAF2',

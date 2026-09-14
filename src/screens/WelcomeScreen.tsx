@@ -117,7 +117,7 @@ const styles = StyleSheet.create({
     height: '100%',
   },
   overlay: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     backgroundColor: 'rgba(255, 255, 255, 0.45)', // Even more vivid, rich and bold background image overlay
   },
   container: {
