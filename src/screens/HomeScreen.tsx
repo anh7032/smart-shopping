@@ -46,7 +46,7 @@ export const HomeScreen: React.FC = () => {
     [cart]
   );
 
-  const budget = session?.budget || 500000;
+  const budget = session?.budget ?? 500000;
   const remaining = budget - totalPrice;
   const progress = Math.min(100, (totalPrice / budget) * 100);
 

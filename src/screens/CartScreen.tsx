@@ -19,7 +19,7 @@ export const CartScreen: React.FC = () => {
   const { totalPrice, savings } = getCartTotals(cart);
   const totalQuantity = cart.reduce((sum, item) => sum + item.quantity, 0);
 
-  const budget = session?.budget || 500000;
+  const budget = session?.budget ?? 500000;
   const remaining = budget - totalPrice;
 
   const aiRecommendations = React.useMemo(() => {

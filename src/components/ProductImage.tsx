@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { Image, ImageStyle, StyleProp, View, ViewStyle } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { ImageSource } from '../types';
 
 interface ProductImageProps {
-  source: any;
+  source: ImageSource | null | undefined;
   imageStyle: StyleProp<ImageStyle>;
   placeholderStyle: StyleProp<ViewStyle>;
   iconSize?: number;
@@ -24,10 +25,8 @@ export const ProductImage: React.FC<ProductImageProps> = ({
 
   if (!source || failed) {
     return (
-      <View style={placeholderStyle}>
-        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-          <Ionicons name="image-outline" size={iconSize} color={iconColor} />
-        </View>
+      <View style={[placeholderStyle, { alignItems: 'center', justifyContent: 'center' }]}>
+        <Ionicons name="image-outline" size={iconSize} color={iconColor} />
       </View>
     );
   }

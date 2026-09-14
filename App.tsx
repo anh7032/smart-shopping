@@ -36,7 +36,9 @@ import { AuditLogScreen } from './src/screens/AuditLogScreen';
 import { RequirementCoverageScreen } from './src/screens/RequirementCoverageScreen';
 import { DemoLauncherScreen } from './src/screens/DemoLauncherScreen';
 import { BottomNavigation } from './src/components/BottomNavigation';
+import { ErrorBoundary } from './src/components/ErrorBoundary';
 import { COLORS, SHADOW } from './src/components/Theme';
+import { ScreenName } from './src/types';
 
 function MainContainer() {
   const { currentScreen, isLoading, userRole, navigate, session } = useApp();
@@ -51,7 +53,7 @@ function MainContainer() {
 
   const renderScreen = () => {
     // 1. Định nghĩa danh sách màn hình được phép cho từng vai trò (RBAC)
-    const ALLOWED_SCREENS_BY_ROLE: { [role: string]: any[] } = {
+    const ALLOWED_SCREENS_BY_ROLE: { [role: string]: ScreenName[] } = {
       customer: [
         'welcome', 'session_init', 'home', 'catalog', 'search', 'search_results',
         'product_detail', 'shelf_map', 'scan', 'ai_suggestions', 'cart',
@@ -193,12 +195,14 @@ function MainContainer() {
 
 export default function App() {
   return (
-    <AppProvider>
-      <SafeAreaView style={styles.safeArea}>
-        <StatusBar style="dark" />
-        <MainContainer />
-      </SafeAreaView>
-    </AppProvider>
+    <ErrorBoundary>
+      <AppProvider>
+        <SafeAreaView style={styles.safeArea}>
+          <StatusBar style="dark" />
+          <MainContainer />
+        </SafeAreaView>
+      </AppProvider>
+    </ErrorBoundary>
   );
 }
 

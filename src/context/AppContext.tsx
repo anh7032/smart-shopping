@@ -314,7 +314,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   }, []);
 
   // Helper function to save to AsyncStorage
-  const saveState = async (key: string, value: any) => {
+  const saveState = async <T>(key: string, value: T): Promise<void> => {
     try {
       await AsyncStorage.setItem(key, JSON.stringify(value));
     } catch (error) {

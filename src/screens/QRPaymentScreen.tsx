@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   View,
   Text,
@@ -16,28 +16,51 @@ export const QRPaymentScreen: React.FC = () => {
   const { cart, pendingPaymentMethod, checkout, navigate } = useApp();
   const [secondsLeft, setSecondsLeft] = useState(300); // 5 minutes count down
   const [isProcessing, setIsProcessing] = useState(false);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const isMountedRef = useRef(true);
 
   const paymentMethod = pendingPaymentMethod || 'qr_bank';
 
-  // Tick down timer
+  // Cleanup function for timer
+  const clearTimer = useCallback(() => {
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+  }, []);
+
+  // Tick down timer with proper cleanup
   useEffect(() => {
-    const timer = setInterval(() => {
+    isMountedRef.current = true;
+
+    timerRef.current = setInterval(() => {
+      if (!isMountedRef.current) {
+        clearTimer();
+        return;
+      }
+
       setSecondsLeft((prev) => {
         if (prev <= 1) {
-          clearInterval(timer);
-          Alert.alert(
-            'Mã QR hết hạn',
-            'Giao dịch thanh toán đã hết thời gian hiệu lực. Vui lòng thử lại.',
-            [{ text: 'Quay lại', onPress: () => navigate('cart') }]
-          );
+          clearTimer();
+          if (isMountedRef.current) {
+            Alert.alert(
+              'Mã QR hết hạn',
+              'Giao dịch thanh toán đã hết thời gian hiệu lực. Vui lòng thử lại.',
+              [{ text: 'Quay lại', onPress: () => navigate('cart') }]
+            );
+          }
           return 0;
         }
         return prev - 1;
       });
     }, 1000);
 
-    return () => clearInterval(timer);
-  }, []);
+    // Cleanup on unmount
+    return () => {
+      isMountedRef.current = false;
+      clearTimer();
+    };
+  }, [clearTimer, navigate]);
 
   const formatTimer = (seconds: number) => {
     const m = Math.floor(seconds / 60).toString().padStart(2, '0');
@@ -48,23 +71,30 @@ export const QRPaymentScreen: React.FC = () => {
   const totalPrice = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
   const handlePaymentSuccess = async () => {
+    // Clear timer when payment is processing
+    clearTimer();
     setIsProcessing(true);
     setTimeout(async () => {
+      if (!isMountedRef.current) return;
       setIsProcessing(false);
       try {
         const receipt = await checkout(paymentMethod);
-        Alert.alert(
-          'Thanh toán thành công 🎉',
-          `Đơn hàng ${receipt.id} đã được thanh toán thành công bằng ${getMethodName(paymentMethod)}.`,
-          [
-            {
-              text: 'Xem hóa đơn',
-              onPress: () => navigate('invoice', { receipt }),
-            },
-          ]
-        );
+        if (isMountedRef.current) {
+          Alert.alert(
+            'Thanh toán thành công 🎉',
+            `Đơn hàng ${receipt.id} đã được thanh toán thành công bằng ${getMethodName(paymentMethod)}.`,
+            [
+              {
+                text: 'Xem hóa đơn',
+                onPress: () => navigate('invoice', { receipt }),
+              },
+            ]
+          );
+        }
       } catch (error) {
-        Alert.alert('Lỗi', 'Không thể khởi tạo hóa đơn.');
+        if (isMountedRef.current) {
+          Alert.alert('Lỗi', 'Không thể khởi tạo hóa đơn.');
+        }
       }
     }, 1000); // Mock processing wait
   };

@@ -27,7 +27,7 @@ export const CheckoutScreen: React.FC = () => {
   const vipDiscount = userRole === 'vip' ? Math.round(originalTotalPrice * 0.05) : 0;
   const totalPrice = originalTotalPrice - vipDiscount;
 
-  const budget = session?.budget || 500000;
+  const budget = session?.budget ?? 500000;
   const remaining = budget - totalPrice;
 
   const handleProceedToPayment = () => {
