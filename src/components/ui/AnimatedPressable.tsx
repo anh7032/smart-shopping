@@ -1,11 +1,5 @@
-import React, { useRef } from 'react';
-import {
-  Animated,
-  GestureResponderEvent,
-  Pressable,
-  StyleProp,
-  ViewStyle,
-} from 'react-native';
+import React from 'react';
+import { GestureResponderEvent, Pressable, StyleProp, ViewStyle } from 'react-native';
 
 interface AnimatedPressableProps {
   children: React.ReactNode;
@@ -16,6 +10,10 @@ interface AnimatedPressableProps {
   testID?: string;
 }
 
+// FIX crash "Transform with key of scale must be a number":
+// Bản an toàn tuyệt đối: không dùng transform/scale Animated gì cả.
+// Chỉ dùng opacity tĩnh khi pressed => không bao giờ dính lỗi transform,
+// vẫn giữ cảm giác nhấn, giữ nguyên layout và onPress.
 export const AnimatedPressable: React.FC<AnimatedPressableProps> = ({
   children,
   onPress,
@@ -24,36 +22,14 @@ export const AnimatedPressable: React.FC<AnimatedPressableProps> = ({
   accessibilityLabel,
   testID,
 }) => {
-  const scale = useRef(new Animated.Value(1)).current;
-
-  const handlePressIn = () => {
-    Animated.spring(scale, {
-      toValue: 0.96,
-      friction: 9,
-      tension: 220,
-      useNativeDriver: true,
-    }).start();
-  };
-
-  const handlePressOut = () => {
-    Animated.spring(scale, {
-      toValue: 1,
-      friction: 7,
-      tension: 180,
-      useNativeDriver: true,
-    }).start();
-  };
-
   return (
     <Pressable
       accessibilityLabel={accessibilityLabel}
       testID={testID}
       onPress={onPress}
-      onPressIn={handlePressIn}
-      onPressOut={handlePressOut}
       style={({ pressed }) => [
-        { transform: [{ scale }] },
         style,
+        { opacity: pressed ? 0.85 : 1 },
         pressed ? pressedStyle : null,
       ]}
     >
