@@ -73,7 +73,10 @@ export const ProductCard: React.FC<ProductCardProps> = ({
 
           <AnimatedPressable
             style={[styles.scanButton, quantityInCart > 0 && styles.scannedButton]}
-            onPress={onAdd}
+            onPress={(e) => {
+              e.stopPropagation();
+              onAdd();
+            }}
           >
             <Ionicons
               name={quantityInCart > 0 ? 'checkmark' : 'scan-outline'}
